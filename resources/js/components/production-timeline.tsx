@@ -148,7 +148,7 @@ export default function ProductionTimeline({
             buildItems(assignments, timezone),
             machines.map((machine) => ({
                 id: machine.id,
-                content: machine.name,
+                content: escapeHtml(machine.name),
             })),
             {
                 start: windowStart,
