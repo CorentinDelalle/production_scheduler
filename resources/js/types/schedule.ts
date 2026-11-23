@@ -1,3 +1,5 @@
+import type { OrderItem } from './orders';
+
 export type ScheduleMachine = {
     id: number;
     name: string;
@@ -6,6 +8,7 @@ export type ScheduleMachine = {
 export type ScheduleAssignment = {
     orderId: number;
     machineId: number;
+    customerId: number;
     customer: string;
     productType: string;
     productTypeId: number;
@@ -15,4 +18,5 @@ export type ScheduleAssignment = {
     productionStart: string;
     end: string;
     isLate: boolean;
+    items: OrderItem[];
 };

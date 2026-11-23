@@ -6,29 +6,17 @@
     --tl-late: oklch(0.52 0.22 27);
     --tl-changeover: oklch(0.7 0 0 / 0.45);
     --tl-changeover-line: oklch(0.55 0 0);
-    --tl-type-0: oklch(0.5 0.15 255);
-    --tl-type-1: oklch(0.5 0.13 160);
-    --tl-type-2: oklch(0.5 0.15 300);
-    --tl-type-3: oklch(0.5 0.12 80);
-    --tl-type-4: oklch(0.5 0.12 210);
-    --tl-type-5: oklch(0.5 0.15 340);
 }
 
 .dark {
     --tl-late: oklch(0.58 0.22 27);
     --tl-changeover: oklch(0.5 0 0 / 0.5);
     --tl-changeover-line: oklch(0.7 0 0);
-    --tl-type-0: oklch(0.58 0.15 255);
-    --tl-type-1: oklch(0.58 0.13 160);
-    --tl-type-2: oklch(0.58 0.15 300);
-    --tl-type-3: oklch(0.58 0.12 80);
-    --tl-type-4: oklch(0.58 0.12 210);
-    --tl-type-5: oklch(0.58 0.15 340);
 }
 
 /* Theme the vis-timeline chrome with the app tokens (light and dark). */
 .production-timeline .vis-timeline {
-    border-color: var(--tl-border);
+    border: 0;
     background: var(--tl-bg);
     color: var(--tl-text);
     font-family: inherit;
@@ -47,75 +35,188 @@
     border-color: var(--tl-border);
 }
 
-.production-timeline .vis-time-axis .vis-text,
-.production-timeline .vis-labelset .vis-label {
+.production-timeline .vis-time-axis .vis-text {
     color: var(--tl-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.production-timeline .vis-time-axis .vis-text.vis-major {
+    color: var(--tl-text);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.production-timeline .vis-labelset .vis-label {
+    color: var(--tl-text);
 }
 
 .production-timeline .vis-labelset .vis-label .vis-inner {
+    padding: 0;
+    display: block;
+}
+
+.production-timeline .tl-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    min-height: 80px;
+    min-width: 150px;
+    padding: 0 14px;
+    text-align: left;
+}
+
+.production-timeline .tl-group .tl-group-name {
+    font-size: 14px;
+    font-weight: 600;
     color: var(--tl-text);
-    font-weight: 500;
+}
+
+.production-timeline .tl-group .tl-group-sub {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--tl-muted);
+    white-space: nowrap;
 }
 
 .production-timeline .vis-item {
-    border-radius: 4px;
+    height: 56px;
+    border-radius: 6px;
     font-size: 12px;
-    color: white;
-    border-width: 1px;
+    color: #15171f;
+    border-width: 1.5px;
 }
 
-.production-timeline .vis-item.vis-selected {
-    box-shadow: 0 0 0 2px var(--tl-text);
+.dark .production-timeline .vis-item {
+    color: var(--tl-text);
 }
 
 .production-timeline .vis-item .vis-item-overflow {
     overflow: hidden;
 }
 
-/* Production colors, one per product type. */
-.tl-type-0 {
-    --tl-color: var(--tl-type-0);
-}
-.tl-type-1 {
-    --tl-color: var(--tl-type-1);
-}
-.tl-type-2 {
-    --tl-color: var(--tl-type-2);
-}
-.tl-type-3 {
-    --tl-color: var(--tl-type-3);
-}
-.tl-type-4 {
-    --tl-color: var(--tl-type-4);
-}
-.tl-type-5 {
-    --tl-color: var(--tl-type-5);
+.production-timeline .vis-item .vis-item-content {
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.production-timeline .vis-item.tl-production,
-.tl-swatch.tl-production {
-    background-color: var(--tl-color);
-    border-color: var(--tl-color);
+/* Production blocks: light type fill, type edge, dark text. */
+.production-timeline .vis-item.vis-range.tl-production,
+.production-timeline .vis-item.vis-range.tl-production.vis-selected {
+    background: var(--tl-fill);
+    border-color: var(--tl-edge);
 }
 
-.production-timeline .vis-item.tl-production.tl-late,
-.tl-swatch.tl-production.tl-late {
-    background-color: var(--tl-late);
-    border-color: var(--tl-late);
-    background-image: none;
-    box-shadow: inset 0 0 0 1px white;
+.production-timeline .vis-item.vis-range.tl-production.tl-late,
+.production-timeline .vis-item.vis-range.tl-production.tl-late.vis-selected {
+    border: 2px solid #b42318;
 }
 
-.production-timeline .vis-item.tl-changeover,
+.production-timeline .vis-item.vis-range.tl-production.vis-selected {
+    box-shadow:
+        0 0 0 2px var(--tl-bg),
+        0 0 0 4px var(--tl-text);
+    z-index: 2;
+}
+
+.production-timeline .vis-item .tl-job {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 52px;
+    padding: 5px 7px !important;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.tl-job-head {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+}
+
+.tl-job-id {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.tl-late-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex: none;
+    background: #b42318;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.tl-job-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.tl-job-customer {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tl-job-meta {
+    font-size: 11px;
+    color: #3d424f;
+}
+
+/* Changeover: hatched grey. */
+.production-timeline .vis-item.vis-range.tl-changeover,
 .tl-swatch.tl-changeover {
-    background-color: var(--tl-changeover);
-    border: 1px dashed var(--tl-changeover-line);
-    background-image: repeating-linear-gradient(
-        45deg,
-        transparent 0 4px,
-        var(--tl-changeover-line) 4px 5px
+    background: repeating-linear-gradient(
+        135deg,
+        #b9bcc5 0 2px,
+        #f1f2f4 2px 5px
     );
-    color: var(--tl-text);
+    border: 0;
+    color: #3d424f;
+}
+
+.production-timeline .vis-item.vis-range.tl-changeover .vis-item-content {
+    display: flex;
+    height: 53px;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Due marker of the selected order: red dashed line with its label. */
+.production-timeline .vis-custom-time.tl-due {
+    width: 0;
+    background: transparent;
+    border-left: 2px dashed #b42318;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.production-timeline .vis-custom-time.tl-due::after {
+    content: attr(data-label);
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    background: #b42318;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 4px;
+    white-space: nowrap;
 }
 
 .tl-swatch {
@@ -123,5 +224,8 @@
     width: 1rem;
     height: 0.75rem;
     border-radius: 3px;
-    border: 1px solid transparent;
+}
+
+.dark .production-timeline .tl-job-meta {
+    color: var(--tl-muted);
 }

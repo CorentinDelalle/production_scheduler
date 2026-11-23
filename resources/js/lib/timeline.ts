@@ -38,3 +38,40 @@ export function startOfDayInTimezone(date: string, timeZone: string): Date {
         utcMidnight - timezoneOffsetMinutes(timeZone, guess) * 60000,
     );
 }
+
+/** The deadline of an order: the end of its need-by day, i.e. midnight starting the next day in the timezone. */
+export function needByDeadline(needByDate: string, timeZone: string): Date {
+    const nextDay = new Date(`${needByDate}T00:00:00Z`);
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+    return startOfDayInTimezone(nextDay.toISOString().slice(0, 10), timeZone);
+}
+
+/** Minutes an order finishes after its deadline (0 when on time). */
+export function lateMinutes(
+    needByDate: string,
+    endIso: string,
+    timeZone: string,
+): number {
+    return Math.max(
+        0,
+        (new Date(endIso).getTime() -
+            needByDeadline(needByDate, timeZone).getTime()) /
+            60000,
+    );
+}
+
+/** An ISO instant in the timezone -> "Mon 08:00". */
+export function formatWeekdayTime(iso: string, timeZone: string): string {
+    const day = new Date(iso).toLocaleDateString('en-GB', {
+        timeZone,
+        weekday: 'short',
+    });
+    const time = new Date(iso).toLocaleTimeString('en-GB', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+    return `${day} ${time}`;
+}

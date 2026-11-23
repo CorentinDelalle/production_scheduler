@@ -2,7 +2,10 @@ import { useEffect, useRef } from 'react';
 import type { ScheduleAssignment, ScheduleMachine } from '@/types';
 import * as vis from 'vis-timeline/standalone';
 import type { TimelineOptions } from 'vis-timeline/standalone';
+import { formatDateTime, formatNumber, minutesBetween } from '@/lib/format';
 import {
+    formatWeekdayTime,
+    needByDeadline,
     startOfDayInTimezone,
     timezoneOffsetMinutes,
     typeColorClass,
@@ -10,11 +13,19 @@ import {
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import './production-timeline.css';
 
+export type TimelineZoom = 'compact' | 'detailed';
+
 type Props = {
     machines: ScheduleMachine[];
     assignments: ScheduleAssignment[];
     start: string;
     timezone: string;
+    zoom: TimelineZoom;
+    /** The order whose detail is open: shown selected, with its due marker. */
+    selectedOrderId: number | null;
+    /** An order just saved: shown selected and scrolled into view, without a marker. */
+    highlightOrderId: number | null;
+    onSelectOrder: (orderId: number) => void;
 };
 
 type TimelineItem = {
@@ -27,6 +38,29 @@ type TimelineItem = {
     content: string;
     title: string;
     editable: false;
+    selectable: boolean;
+};
+
+const WARNING_ICON =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
+
+/** Tags and attributes the item and group templates need through vis-timeline's XSS filter. */
+const TEMPLATE_TAGS = {
+    div: ['class'],
+    span: ['class'],
+    svg: [
+        'xmlns',
+        'width',
+        'height',
+        'viewBox',
+        'fill',
+        'stroke',
+        'stroke-width',
+        'stroke-linecap',
+        'stroke-linejoin',
+        'aria-hidden',
+    ],
+    path: ['d'],
 };
 
 /** vis-timeline renders strings as HTML: escape user data (customer names). */
@@ -39,22 +73,13 @@ function escapeHtml(text: string): string {
         .replaceAll("'", '&#39;');
 }
 
-function tooltip(assignment: ScheduleAssignment, timeZone: string): string {
-    const format = (iso: string) =>
-        new Date(iso).toLocaleString('en-CA', {
-            timeZone,
-            dateStyle: 'medium',
-            timeStyle: 'short',
-        });
-
+function itemTitle(assignment: ScheduleAssignment, timeZone: string): string {
     return [
         `Order #${assignment.orderId}`,
         assignment.customer,
-        `${assignment.productType}, ${assignment.quantity} units`,
-        `Need by: ${assignment.needByDate}`,
-        `Start: ${format(assignment.productionStart)}`,
-        `End: ${format(assignment.end)}`,
-        ...(assignment.isLate ? ['LATE'] : []),
+        `${assignment.productType}, ${formatNumber(assignment.quantity)} units`,
+        `${formatDateTime(assignment.productionStart, timeZone)} to ${formatDateTime(assignment.end, timeZone)}`,
+        assignment.isLate ? 'LATE' : 'On time',
     ]
         .map(escapeHtml)
         .join('<br>');
@@ -68,6 +93,13 @@ function buildItems(
         const items: TimelineItem[] = [];
 
         if (assignment.changeoverStart !== assignment.productionStart) {
+            const minutes = Math.round(
+                minutesBetween(
+                    assignment.changeoverStart,
+                    assignment.productionStart,
+                ),
+            );
+
             items.push({
                 id: `changeover-${assignment.orderId}`,
                 group: assignment.machineId,
@@ -76,10 +108,17 @@ function buildItems(
                 type: 'range',
                 className: 'tl-changeover',
                 content: '',
-                title: `Changeover before order #${assignment.orderId}`,
+                title: escapeHtml(
+                    `Changeover ${minutes} min to ${assignment.productType}`,
+                ),
                 editable: false,
+                selectable: false,
             });
         }
+
+        const badge = assignment.isLate
+            ? `<span class="tl-late-badge">${WARNING_ICON}LATE</span>`
+            : '';
 
         items.push({
             id: `order-${assignment.orderId}`,
@@ -92,12 +131,44 @@ function buildItems(
                 typeColorClass(assignment.productTypeId),
                 assignment.isLate ? 'tl-late' : '',
             ].join(' '),
-            content: escapeHtml(assignment.customer),
-            title: tooltip(assignment, timeZone),
+            content:
+                `<div class="tl-job"><div class="tl-job-head"><span class="tl-job-id">#${assignment.orderId}</span>${badge}</div>` +
+                `<div class="tl-job-line tl-job-customer">${escapeHtml(assignment.customer)}</div>` +
+                `<div class="tl-job-line tl-job-meta">${escapeHtml(assignment.productType)} · ${formatNumber(assignment.quantity)}</div></div>`,
+            title: itemTitle(assignment, timeZone),
             editable: false,
+            selectable: true,
         });
 
         return items;
+    });
+}
+
+function buildGroups(
+    machines: ScheduleMachine[],
+    assignments: ScheduleAssignment[],
+    timeZone: string,
+) {
+    return machines.map((machine) => {
+        const own = assignments.filter(
+            (assignment) => assignment.machineId === machine.id,
+        );
+        const free = own.reduce<string | null>(
+            (latest, assignment) =>
+                latest === null || assignment.end > latest
+                    ? assignment.end
+                    : latest,
+            null,
+        );
+        const sub =
+            free === null
+                ? 'No orders'
+                : `${own.length} ${own.length === 1 ? 'order' : 'orders'} · free ${formatWeekdayTime(free, timeZone)}`;
+
+        return {
+            id: machine.id,
+            content: `<div class="tl-group"><div class="tl-group-name">${escapeHtml(machine.name)}</div><div class="tl-group-sub">${escapeHtml(sub)}</div></div>`,
+        };
     });
 }
 
@@ -106,8 +177,41 @@ export default function ProductionTimeline({
     assignments,
     start,
     timezone,
+    zoom,
+    selectedOrderId,
+    highlightOrderId,
+    onSelectOrder,
 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const timelineRef = useRef<vis.Timeline | null>(null);
+    const zoomRef = useRef(zoom);
+    const onSelectRef = useRef(onSelectOrder);
+
+    zoomRef.current = zoom;
+    onSelectRef.current = onSelectOrder;
+
+    /** The visible window: the whole plan (compact) or 24 hours from the plan start (detailed). */
+    function applyWindow(timeline: vis.Timeline, mode: TimelineZoom) {
+        const windowStart = startOfDayInTimezone(start, timezone);
+        const lastEnd = assignments.reduce(
+            (latest, assignment) =>
+                Math.max(latest, new Date(assignment.end).getTime()),
+            0,
+        );
+        const day = 24 * 3600 * 1000;
+        const fullEnd =
+            lastEnd > windowStart.getTime()
+                ? lastEnd + (lastEnd - windowStart.getTime()) * 0.02
+                : windowStart.getTime() + 3 * day;
+
+        timeline.setWindow(
+            windowStart,
+            mode === 'detailed'
+                ? new Date(windowStart.getTime() + day)
+                : new Date(fullEnd),
+            { animation: false },
+        );
+    }
 
     useEffect(() => {
         const container = containerRef.current;
@@ -115,17 +219,6 @@ export default function ProductionTimeline({
         if (!container) {
             return;
         }
-
-        const windowStart = startOfDayInTimezone(start, timezone);
-        const lastEnd = assignments.reduce(
-            (latest, assignment) =>
-                Math.max(latest, new Date(assignment.end).getTime()),
-            0,
-        );
-        const windowEnd =
-            lastEnd > windowStart.getTime()
-                ? new Date(lastEnd)
-                : new Date(windowStart.getTime() + 24 * 3600 * 1000);
 
         // Display in the business timezone: moment() is vis-timeline's date constructor.
         // The standalone build exports it, but its typings do not declare it.
@@ -146,26 +239,120 @@ export default function ProductionTimeline({
         const timeline = new vis.Timeline(
             container,
             buildItems(assignments, timezone),
-            machines.map((machine) => ({
-                id: machine.id,
-                content: escapeHtml(machine.name),
-            })),
+            buildGroups(machines, assignments, timezone),
             {
-                start: windowStart,
-                end: windowEnd,
                 editable: false,
                 stack: false,
                 orientation: 'top',
                 locale: 'en',
                 zoomKey: 'ctrlKey',
                 horizontalScroll: true,
-                margin: { item: 4 },
+                zoomMin: 30 * 60 * 1000,
+                showCurrentTime: false,
+                selectable: true,
+                margin: { item: { horizontal: 0, vertical: 12 }, axis: 0 },
+                format: {
+                    minorLabels: {
+                        hour: 'HH:mm',
+                        minute: 'HH:mm',
+                        weekday: 'ddd D',
+                        day: 'D',
+                    },
+                    majorLabels: {
+                        minute: 'ddd D MMM',
+                        hour: 'ddd D MMM',
+                        weekday: 'MMM YYYY',
+                        day: 'MMM YYYY',
+                    },
+                },
                 moment: inTimezone,
+                // vis-timeline sanitises item and group HTML. Keep the filter, but allow
+                // the classes and the icon our templates use (user data is escaped anyway).
+                xss: {
+                    disabled: false,
+                    filterOptions: { whiteList: TEMPLATE_TAGS },
+                },
             } as unknown as TimelineOptions,
         );
 
-        return () => timeline.destroy();
+        timeline.on(
+            'click',
+            (properties: { item?: string | number | null }) => {
+                const match = /^order-(\d+)$/.exec(`${properties.item ?? ''}`);
+
+                if (match) {
+                    onSelectRef.current(Number(match[1]));
+                }
+            },
+        );
+
+        timelineRef.current = timeline;
+        applyWindow(timeline, zoomRef.current);
+
+        return () => {
+            timeline.destroy();
+            timelineRef.current = null;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [machines, assignments, start, timezone]);
+
+    useEffect(() => {
+        if (timelineRef.current) {
+            applyWindow(timelineRef.current, zoom);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [zoom]);
+
+    // Selection ring and due marker. Runs after the effect that (re)creates the timeline.
+    useEffect(() => {
+        const timeline = timelineRef.current;
+
+        if (!timeline) {
+            return;
+        }
+
+        const focusedId = selectedOrderId ?? highlightOrderId;
+        timeline.setSelection(focusedId === null ? [] : [`order-${focusedId}`]);
+
+        const assignment = assignments.find(
+            (candidate) => candidate.orderId === selectedOrderId,
+        );
+
+        if (assignment) {
+            const due = needByDeadline(assignment.needByDate, timezone);
+            const label = `Due #${assignment.orderId}`;
+
+            timeline.addCustomTime(due, 'tl-due');
+            timeline.setCustomTimeTitle(label, 'tl-due');
+            const bar = containerRef.current?.querySelector<HTMLElement>(
+                '.vis-custom-time.tl-due',
+            );
+
+            if (bar) {
+                bar.dataset.label = label;
+            }
+        } else if (selectedOrderId === null && highlightOrderId !== null) {
+            timeline.focus(`order-${highlightOrderId}`, {
+                animation: false,
+                zoom: false,
+            });
+        }
+
+        return () => {
+            try {
+                timeline.removeCustomTime('tl-due');
+            } catch {
+                // No marker was added.
+            }
+        };
+    }, [
+        machines,
+        assignments,
+        start,
+        timezone,
+        selectedOrderId,
+        highlightOrderId,
+    ]);
 
     return <div ref={containerRef} className="production-timeline" />;
 }
