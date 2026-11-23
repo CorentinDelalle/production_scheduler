@@ -9,9 +9,10 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
-        'Noto Color Emoji';
+        'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono:
+        'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -59,42 +60,46 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-muted: var(--sidebar-muted);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    --background: oklch(0.973 0.003 280);
+    --foreground: oklch(0.18 0.015 270);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.18 0.015 270);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.18 0.015 270);
+    --primary: oklch(0.53 0.2 0);
+    --primary-foreground: oklch(1 0 0);
+    --secondary: oklch(0.95 0.004 280);
+    --secondary-foreground: oklch(0.18 0.015 270);
+    --muted: oklch(0.95 0.004 280);
+    --muted-foreground: oklch(0.5 0.024 268);
+    --accent: oklch(0.95 0.004 280);
+    --accent-foreground: oklch(0.18 0.015 270);
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
+    --border: oklch(0.92 0.005 280);
+    --input: oklch(0.92 0.005 280);
+    --ring: oklch(0.65 0.16 5);
     --chart-1: oklch(0.646 0.222 41.116);
     --chart-2: oklch(0.6 0.118 184.704);
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+
+    /* The sidebar is dark in both themes. */
+    --sidebar: oklch(0.18 0.015 270);
+    --sidebar-foreground: oklch(0.97 0 0);
+    --sidebar-primary: oklch(0.53 0.2 0);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.3 0.018 270);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(0.3 0.018 270);
+    --sidebar-ring: oklch(0.5 0.02 270);
+    --sidebar-muted: oklch(0.7 0.018 270);
 }
 
 .dark {
@@ -104,8 +109,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.145 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: oklch(0.62 0.2 5);
+    --primary-foreground: oklch(1 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -116,20 +121,12 @@
     --destructive-foreground: oklch(0.637 0.237 25.331);
     --border: oklch(0.269 0 0);
     --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
+    --ring: oklch(0.55 0.16 5);
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
 }
 
 @layer base {
@@ -140,4 +137,67 @@
     body {
         @apply bg-background text-foreground;
     }
+}
+
+/* Product type palette (index = product type id % 6), shared by the timeline and the type swatches. */
+:root {
+    --tl-type-0-fill: #cdeefa;
+    --tl-type-0-edge: #0080b3;
+    --tl-type-1-fill: #fbd3e4;
+    --tl-type-1-edge: #c4125f;
+    --tl-type-2-fill: #ffefad;
+    --tl-type-2-edge: #a67c00;
+    --tl-type-3-fill: #e2e5ea;
+    --tl-type-3-edge: #4a5263;
+    --tl-type-4-fill: #d6f0e0;
+    --tl-type-4-edge: #1d7f4e;
+    --tl-type-5-fill: #e6dcf7;
+    --tl-type-5-edge: #6b47b8;
+}
+
+.dark {
+    /* Dark: the fill is the edge colour at low opacity, the edge is lighter. */
+    --tl-type-0-fill: color-mix(in oklch, #5cc8f0 28%, transparent);
+    --tl-type-0-edge: #5cc8f0;
+    --tl-type-1-fill: color-mix(in oklch, #f06aa0 28%, transparent);
+    --tl-type-1-edge: #f06aa0;
+    --tl-type-2-fill: color-mix(in oklch, #f5c93d 28%, transparent);
+    --tl-type-2-edge: #f5c93d;
+    --tl-type-3-fill: color-mix(in oklch, #aab1bd 28%, transparent);
+    --tl-type-3-edge: #aab1bd;
+    --tl-type-4-fill: color-mix(in oklch, #4cc587 28%, transparent);
+    --tl-type-4-edge: #4cc587;
+    --tl-type-5-fill: color-mix(in oklch, #a58be0 28%, transparent);
+    --tl-type-5-edge: #a58be0;
+}
+
+.tl-type-0 {
+    --tl-fill: var(--tl-type-0-fill);
+    --tl-edge: var(--tl-type-0-edge);
+    --tl-color: var(--tl-edge);
+}
+.tl-type-1 {
+    --tl-fill: var(--tl-type-1-fill);
+    --tl-edge: var(--tl-type-1-edge);
+    --tl-color: var(--tl-edge);
+}
+.tl-type-2 {
+    --tl-fill: var(--tl-type-2-fill);
+    --tl-edge: var(--tl-type-2-edge);
+    --tl-color: var(--tl-edge);
+}
+.tl-type-3 {
+    --tl-fill: var(--tl-type-3-fill);
+    --tl-edge: var(--tl-type-3-edge);
+    --tl-color: var(--tl-edge);
+}
+.tl-type-4 {
+    --tl-fill: var(--tl-type-4-fill);
+    --tl-edge: var(--tl-type-4-edge);
+    --tl-color: var(--tl-edge);
+}
+.tl-type-5 {
+    --tl-fill: var(--tl-type-5-fill);
+    --tl-edge: var(--tl-type-5-edge);
+    --tl-color: var(--tl-edge);
 }
