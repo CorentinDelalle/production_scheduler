@@ -1,7 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, CalendarRange, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    CalendarRange,
+    ClipboardList,
+    Layers,
+    Package,
+    Printer,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -13,33 +19,24 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard, schedule } from '@/routes';
+import { dashboard } from '@/routes';
+import { index as customersIndex } from '@/routes/customers';
+import { index as machinesIndex } from '@/routes/machines';
+import { index as ordersIndex } from '@/routes/orders';
+import { index as productTypesIndex } from '@/routes/product-types';
+import { index as productsIndex } from '@/routes/products';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Schedule',
-        href: schedule(),
-        icon: CalendarRange,
-    },
+    { title: 'Plan', href: dashboard(), icon: CalendarRange },
+    { title: 'Orders', href: ordersIndex(), icon: ClipboardList },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
+const catalogNavItems: NavItem[] = [
+    { title: 'Customers', href: customersIndex(), icon: Users },
+    { title: 'Product types', href: productTypesIndex(), icon: Layers },
+    { title: 'Products', href: productsIndex(), icon: Package },
+    { title: 'Machines', href: machinesIndex(), icon: Printer },
 ];
 
 export function AppSidebar() {
@@ -59,10 +56,10 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <NavMain label="Catalog" items={catalogNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
