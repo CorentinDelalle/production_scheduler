@@ -114,4 +114,20 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Seeded Account
+    |--------------------------------------------------------------------------
+    |
+    | The application has a single account, created by the database seeder.
+    | Its credentials are given to the reviewer.
+    |
+    */
+
+    'seeded_user' => [
+        'name' => env('SEEDED_USER_NAME', 'Reviewer'),
+        'email' => env('SEEDED_USER_EMAIL'),
+        'password' => env('SEEDED_USER_PASSWORD'),
+    ],
+
 ];
