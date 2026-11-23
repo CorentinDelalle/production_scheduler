@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * The product type is stored on the order on purpose: every product in the order must match it.
+ *
+ * @property CarbonImmutable $need_by_date
  */
 #[Fillable(['customer_id', 'product_type_id', 'need_by_date'])]
 class Order extends Model
