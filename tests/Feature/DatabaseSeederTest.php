@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Machine;
+use App\Models\Product;
+use App\Models\ProductType;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +33,25 @@ class DatabaseSeederTest extends TestCase
         $this->assertSame('reviewer@example.com', $user->email);
         $this->assertTrue(Hash::check('second-password', $user->password));
         $this->assertTrue($user->hasVerifiedEmail());
+    }
+
+    public function test_reference_data_is_created_once_and_never_overwritten(): void
+    {
+        config([
+            'auth.seeded_user.email' => 'reviewer@example.com',
+            'auth.seeded_user.password' => 'password',
+        ]);
+        $this->seed(DatabaseSeeder::class);
+
+        ProductType::where('name', 'Type 1')->update(['units_per_hour' => 800]);
+        $this->seed(DatabaseSeeder::class);
+
+        $this->assertDatabaseCount('product_types', 3);
+        $this->assertDatabaseCount('products', 6);
+        $this->assertDatabaseCount('machines', 2);
+        $this->assertSame(800, ProductType::where('name', 'Type 1')->value('units_per_hour'));
+        $this->assertSame('Type 1', Product::where('name', 'F')->firstOrFail()->productType->name);
+        $this->assertSame(['Machine 1', 'Machine 2'], Machine::orderBy('name')->pluck('name')->all());
     }
 
     public function test_seeding_fails_without_credentials(): void

@@ -32,5 +32,7 @@ class DatabaseSeeder extends Seeder
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
         }
+
+        $this->call(ReferenceDataSeeder::class);
     }
 }
