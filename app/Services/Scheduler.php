@@ -10,7 +10,8 @@ use InvalidArgumentException;
 
 /**
  * Greedy production scheduler. It reads only already loaded data and never queries the database.
- * Times are tracked as whole minutes since the start date.
+ * Times are tracked as whole minutes since the start date, and returned in the timezone of the start date.
+ * Machines run 24/7, so minutes are real elapsed time, also across a daylight saving change.
  */
 final class Scheduler
 {
@@ -42,21 +43,37 @@ final class Scheduler
                 'lastTypeId' => $order->product_type_id,
             ];
 
-            $end = $start->addMinutes($placement['end']);
+            $end = $this->at($start, $placement['end']);
 
             $assignments[] = new Assignment(
                 order: $order,
                 machineId: $placement['machineId'],
-                changeoverStart: $start->addMinutes($placement['changeoverStart']),
-                productionStart: $start->addMinutes($placement['productionStart']),
+                changeoverStart: $this->at($start, $placement['changeoverStart']),
+                productionStart: $this->at($start, $placement['productionStart']),
                 end: $end,
-                isLate: $end > $order->need_by_date->addDay(),
+                isLate: $end > $this->endOfNeedByDay($order, $start),
             );
 
             unset($remaining[$index]);
         }
 
         return $assignments;
+    }
+
+    /**
+     * The instant `$minutes` elapsed minutes after the start, in the start's timezone.
+     */
+    private function at(CarbonImmutable $start, int $minutes): CarbonImmutable
+    {
+        return $start->utc()->addMinutes($minutes)->setTimezone($start->getTimezone());
+    }
+
+    /**
+     * Midnight ending the need-by day, in the start's timezone.
+     */
+    private function endOfNeedByDay(Order $order, CarbonImmutable $start): CarbonImmutable
+    {
+        return CarbonImmutable::parse($order->need_by_date->toDateString(), $start->getTimezone())->startOfDay()->addDay();
     }
 
     /**

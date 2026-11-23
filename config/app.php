@@ -67,6 +67,9 @@ return [
 
     'timezone' => 'UTC',
 
+    // Business timezone of the production schedule (Montreal). Stored timestamps stay in UTC.
+    'schedule_timezone' => env('SCHEDULE_TIMEZONE', 'America/Toronto'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

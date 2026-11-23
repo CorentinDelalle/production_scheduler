@@ -194,6 +194,38 @@ class SchedulerTest extends TestCase
         $this->assertFalse($assignments[0]->isLate);
     }
 
+    public function test_the_late_flag_uses_the_end_of_the_need_by_day_in_the_start_timezone(): void
+    {
+        $start = CarbonImmutable::parse('2026-12-01 00:00:00', 'America/Toronto');
+        $scheduler = new Scheduler;
+        $machines = new Collection([$this->makeMachine(1)]);
+
+        // 30 min changeover + 1380 min = ends 23:30 Montreal (04:30 UTC the next day).
+        $onTime = $scheduler->schedule(new Collection([$this->type2Order(1, [17710], '2026-12-01')]), $machines, $start)[0];
+        $this->assertSame('2026-12-01 23:30:00', $onTime->end->toDateTimeString());
+        $this->assertSame('2026-12-02 04:30:00', $onTime->end->utc()->toDateTimeString());
+        $this->assertFalse($onTime->isLate);
+
+        // Ends 00:01 the next day in Montreal.
+        $late = $scheduler->schedule(new Collection([$this->type2Order(1, [18096], '2026-12-01')]), $machines, $start)[0];
+        $this->assertSame('2026-12-02 00:01:00', $late->end->toDateTimeString());
+        $this->assertTrue($late->isLate);
+    }
+
+    public function test_durations_are_real_elapsed_minutes_across_a_daylight_saving_change(): void
+    {
+        // DST ends on 2026-11-01 at 02:00 in Montreal: 00:00 + 180 elapsed minutes = 02:00 EST.
+        $start = CarbonImmutable::parse('2026-11-01 00:00:00', 'America/Toronto');
+
+        // 30 min changeover + 150 min of production (1000 units at 400/h is 150 min).
+        $order = $this->makeOrder(1, 1, 400, 30, [1000], '2026-11-05');
+        $assignment = (new Scheduler)->schedule(new Collection([$order]), new Collection([$this->makeMachine(1)]), $start)[0];
+
+        $this->assertSame('2026-11-01 07:00:00', $assignment->end->utc()->toDateTimeString());
+        $this->assertSame('2026-11-01 02:00:00', $assignment->end->toDateTimeString());
+        $this->assertSame(-300, $assignment->end->utcOffset());
+    }
+
     /**
      * @param  list<Order>  $orders
      * @param  list<int>  $machineIds
