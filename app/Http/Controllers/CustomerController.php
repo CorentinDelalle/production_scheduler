@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\DescribesUsage;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
@@ -10,6 +11,8 @@ use Inertia\Response;
 
 class CustomerController extends Controller
 {
+    use DescribesUsage;
+
     public function index(): Response
     {
         return Inertia::render('customers/index', [

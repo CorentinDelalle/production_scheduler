@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\PresentsOrders;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\ScheduleRequest;
 use App\Models\Machine;
@@ -15,6 +16,8 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    use PresentsOrders;
+
     public function index(ScheduleRequest $request, Scheduler $scheduler): Response
     {
         $start = $request->startDate();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\DescribesUsage;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use App\Models\ProductType;
@@ -11,6 +12,8 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    use DescribesUsage;
+
     public function index(): Response
     {
         return Inertia::render('products/index', [

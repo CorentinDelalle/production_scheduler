@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Concerns\PresentsOrders;
 use App\Http\Requests\ScheduleRequest;
 use App\Models\Machine;
 use App\Models\Order;
@@ -12,6 +13,8 @@ use Inertia\Response;
 
 class ScheduleController extends Controller
 {
+    use PresentsOrders;
+
     public function __invoke(ScheduleRequest $request, Scheduler $scheduler): Response
     {
         $start = $request->startDate();
