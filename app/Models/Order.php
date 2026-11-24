@@ -46,6 +46,14 @@ class Order extends Model
     }
 
     /**
+     * Units to produce across all lines. `items` should be loaded to avoid a query per order.
+     */
+    public function totalQuantity(): int
+    {
+        return (int) $this->items->sum('quantity');
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

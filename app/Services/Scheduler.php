@@ -161,10 +161,9 @@ final class Scheduler
      */
     private function durationInMinutes(Order $order): int
     {
-        $totalQuantity = (int) $order->items->sum('quantity');
         $unitsPerHour = $order->productType->units_per_hour;
 
-        return intdiv($totalQuantity * 60 + $unitsPerHour - 1, $unitsPerHour);
+        return intdiv($order->totalQuantity() * 60 + $unitsPerHour - 1, $unitsPerHour);
     }
 
     /**
