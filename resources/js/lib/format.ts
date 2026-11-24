@@ -24,16 +24,19 @@ export function formatTime(iso: string, timeZone: string): string {
     });
 }
 
-/** An ISO instant shown in the schedule timezone -> "Mon 23 Nov, 14:05". */
-export function formatDateTime(iso: string, timeZone: string): string {
-    const day = new Date(iso).toLocaleDateString('en-GB', {
+/** An ISO instant shown in the schedule timezone -> "Mon 23 Nov". */
+export function formatDate(iso: string, timeZone: string): string {
+    return new Date(iso).toLocaleDateString('en-GB', {
         timeZone,
         weekday: 'short',
         day: 'numeric',
         month: 'short',
     });
+}
 
-    return `${day}, ${formatTime(iso, timeZone)}`;
+/** An ISO instant shown in the schedule timezone -> "Mon 23 Nov, 14:05". */
+export function formatDateTime(iso: string, timeZone: string): string {
+    return `${formatDate(iso, timeZone)}, ${formatTime(iso, timeZone)}`;
 }
 
 /** A duration in minutes -> "45 min", "2 h", "2 h 05". */

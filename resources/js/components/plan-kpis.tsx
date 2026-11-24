@@ -1,6 +1,6 @@
 import { TriangleAlert } from 'lucide-react';
 
-import { formatDateTime } from '@/lib/format';
+import { formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import type { ScheduleAssignment, ScheduleMachine } from '@/types';
 
@@ -89,9 +89,18 @@ export default function PlanKpis({
                 }
                 className="text-foreground"
             >
-                <span className="whitespace-nowrap">
-                    {last ? formatDateTime(last.end, timezone) : '—'}
-                </span>
+                {last ? (
+                    <>
+                        <span className="whitespace-nowrap">
+                            {formatDate(last.end, timezone)},
+                        </span>{' '}
+                        <span className="whitespace-nowrap">
+                            {formatTime(last.end, timezone)}
+                        </span>
+                    </>
+                ) : (
+                    '—'
+                )}
             </Kpi>
         </div>
     );
