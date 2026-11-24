@@ -168,7 +168,7 @@ export default function Orders({
                                     onDelete={openDelete}
                                 />
 
-                                <ul className="flex flex-col gap-2 md:hidden">
+                                <ul className="flex flex-col gap-2 xl:hidden">
                                     {rows.map((order) => (
                                         <OrderCard
                                             key={order.id}

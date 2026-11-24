@@ -23,7 +23,7 @@ export default function OrdersTable({
     onDelete,
 }: Props) {
     return (
-        <div className="hidden overflow-hidden rounded-xl border bg-card md:block">
+        <div className="hidden overflow-hidden rounded-xl border bg-card xl:block">
             <table className="w-full text-sm">
                 <thead className="border-b bg-muted/40 text-left text-xs font-semibold text-muted-foreground">
                     <tr>
