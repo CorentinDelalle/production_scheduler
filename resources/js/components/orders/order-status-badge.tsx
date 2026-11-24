@@ -17,8 +17,8 @@ export default function OrderStatusBadge({ late, label, className }: Props) {
             className={cn(
                 'inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap',
                 late
-                    ? 'bg-[#fdecea] text-[#9b1c13] dark:bg-red-950/60 dark:text-red-300'
-                    : 'bg-[#e3f3ec] text-[#0f5f47] dark:bg-emerald-950/60 dark:text-emerald-300',
+                    ? 'bg-danger-soft text-danger-soft-foreground'
+                    : 'bg-success-soft text-success-soft-foreground',
                 className,
             )}
         >

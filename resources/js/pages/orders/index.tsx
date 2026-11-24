@@ -481,7 +481,7 @@ function RowActions({
                 onClick={onDelete}
                 aria-label={`Delete order #${order.id}`}
                 title="Delete"
-                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="text-danger hover:bg-danger-soft hover:text-danger"
             >
                 <Trash2 />
             </Button>

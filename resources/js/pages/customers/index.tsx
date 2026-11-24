@@ -151,7 +151,7 @@ export default function CustomersIndex({ customers }: Props) {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="size-10 text-[#b42318] hover:bg-[#fdecea] hover:text-[#b42318]"
+                                                    className="size-10 text-danger hover:bg-danger-soft hover:text-danger"
                                                     title="Delete"
                                                     aria-label={`Delete ${customer.name}`}
                                                     onClick={() =>

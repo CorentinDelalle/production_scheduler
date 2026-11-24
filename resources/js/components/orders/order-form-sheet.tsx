@@ -302,7 +302,7 @@ export default function OrderFormSheet({
                                 message={errors.product_type_id}
                             />
                             {typeChangeNote && (
-                                <p className="rounded-md bg-[#fff7db] px-3 py-2 text-xs text-[#8a6100] dark:bg-amber-950/60 dark:text-amber-300">
+                                <p className="rounded-md bg-warning-soft px-3 py-2 text-xs text-warning-soft-foreground">
                                     Products of another type were removed.
                                 </p>
                             )}

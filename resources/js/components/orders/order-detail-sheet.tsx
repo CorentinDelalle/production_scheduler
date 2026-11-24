@@ -128,7 +128,7 @@ export default function OrderDetailSheet({
 
                     <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-6 py-5">
                         {assignment.isLate && (
-                            <div className="flex gap-2.5 rounded-lg border border-[#f1b8b2] bg-[#fdecea] p-3 text-[#7a1610] dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                            <div className="flex gap-2.5 rounded-lg border border-danger-border bg-danger-soft p-3 text-danger-soft-foreground">
                                 <TriangleAlert
                                     className="mt-0.5 size-4 shrink-0"
                                     aria-hidden
@@ -184,7 +184,7 @@ export default function OrderDetailSheet({
                     <SheetFooter className="flex-row items-center justify-between border-t">
                         <Button
                             variant="outline"
-                            className="border-[#f1b8b2] text-[#b42318] hover:bg-[#fdecea] hover:text-[#b42318] dark:border-red-900 dark:text-red-300"
+                            className="border-danger-border text-danger hover:bg-danger-soft hover:text-danger"
                             onClick={() => setConfirmingDelete(true)}
                         >
                             Delete

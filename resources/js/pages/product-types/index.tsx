@@ -196,7 +196,7 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="size-10 text-[#b42318] hover:bg-[#fdecea] hover:text-[#b42318]"
+                                                    className="size-10 text-danger hover:bg-danger-soft hover:text-danger"
                                                     title="Delete"
                                                     aria-label={`Delete ${productType.name}`}
                                                     onClick={() =>
@@ -229,7 +229,7 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                     editing && editing.ordersCount > 0 ? (
                         <div
                             role="status"
-                            className="flex gap-2 rounded-lg border border-[#b5dcef] bg-[#eef7fc] p-3 text-sm text-[#08415c]"
+                            className="flex gap-2 rounded-lg border border-info-border bg-info-soft p-3 text-sm text-info-soft-foreground"
                         >
                             <Info className="mt-0.5 size-4 shrink-0" />
                             <p>

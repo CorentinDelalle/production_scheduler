@@ -43,8 +43,8 @@ export default function DeleteDialog({
                     <span
                         className={
                             blocked
-                                ? 'mb-2 flex size-10 items-center justify-center rounded-lg bg-[#fff7db] text-[#8a6100] dark:bg-amber-950/60 dark:text-amber-300'
-                                : 'mb-2 flex size-10 items-center justify-center rounded-lg bg-[#fdecea] text-[#9b1c13] dark:bg-red-950/60 dark:text-red-300'
+                                ? 'mb-2 flex size-10 items-center justify-center rounded-lg bg-warning-soft text-warning-soft-foreground'
+                                : 'mb-2 flex size-10 items-center justify-center rounded-lg bg-danger-soft text-danger-soft-foreground'
                         }
                         aria-hidden
                     >

@@ -61,6 +61,19 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-muted: var(--sidebar-muted);
+
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-danger-soft: var(--danger-soft);
+    --color-danger-soft-foreground: var(--danger-soft-foreground);
+    --color-danger-border: var(--danger-border);
+    --color-warning-soft: var(--warning-soft);
+    --color-warning-soft-foreground: var(--warning-soft-foreground);
+    --color-success-soft: var(--success-soft);
+    --color-success-soft-foreground: var(--success-soft-foreground);
+    --color-info-soft: var(--info-soft);
+    --color-info-soft-foreground: var(--info-soft-foreground);
+    --color-info-border: var(--info-border);
 }
 
 :root {
@@ -100,6 +113,20 @@
     --sidebar-border: oklch(0.3 0.018 270);
     --sidebar-ring: oklch(0.5 0.02 270);
     --sidebar-muted: oklch(0.7 0.018 270);
+
+    /* Status colors (late, warning, on time, info) used by badges, banners and the timeline. */
+    --danger: #b42318;
+    --danger-foreground: #fff;
+    --danger-soft: #fdecea;
+    --danger-soft-foreground: #7a1610;
+    --danger-border: #f1b8b2;
+    --warning-soft: #fff7db;
+    --warning-soft-foreground: #8a6100;
+    --success-soft: #e3f3ec;
+    --success-soft-foreground: #0f5f47;
+    --info-soft: #eef7fc;
+    --info-soft-foreground: #08415c;
+    --info-border: #b5dcef;
 }
 
 .dark {
@@ -127,6 +154,27 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
+
+    --danger: var(--color-red-400);
+    --danger-foreground: var(--color-red-950);
+    --danger-soft: color-mix(in oklab, var(--color-red-950) 50%, transparent);
+    --danger-soft-foreground: var(--color-red-200);
+    --danger-border: var(--color-red-900);
+    --warning-soft: color-mix(
+        in oklab,
+        var(--color-amber-950) 60%,
+        transparent
+    );
+    --warning-soft-foreground: var(--color-amber-300);
+    --success-soft: color-mix(
+        in oklab,
+        var(--color-emerald-950) 60%,
+        transparent
+    );
+    --success-soft-foreground: var(--color-emerald-300);
+    --info-soft: color-mix(in oklab, var(--color-sky-950) 60%, transparent);
+    --info-soft-foreground: var(--color-sky-200);
+    --info-border: var(--color-sky-900);
 }
 
 @layer base {

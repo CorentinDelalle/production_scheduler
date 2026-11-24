@@ -69,7 +69,7 @@ export default function PlanKpis({
                 }
                 className={
                     lateCount > 0
-                        ? 'border-[#f1b8b2] bg-[#fff6f5] text-[#b42318] dark:border-red-900 dark:bg-red-950/40 dark:text-red-300'
+                        ? 'border-danger-border bg-danger-soft text-danger-soft-foreground'
                         : 'text-foreground'
                 }
             >

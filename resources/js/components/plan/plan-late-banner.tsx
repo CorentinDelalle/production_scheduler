@@ -25,7 +25,7 @@ export default function PlanLateBanner({
     return (
         <div
             role="status"
-            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[10px] border border-[#f1b8b2] bg-[#fdecea] px-4 py-3 text-[#7a1610] dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[10px] border border-danger-border bg-danger-soft px-4 py-3 text-danger-soft-foreground"
         >
             <TriangleAlert className="size-5 shrink-0" aria-hidden />
             <strong className="font-semibold">
@@ -38,7 +38,7 @@ export default function PlanLateBanner({
                     key={assignment.orderId}
                     type="button"
                     onClick={() => onSelectOrder(assignment.orderId)}
-                    className="rounded-full border border-[#e79a92] bg-white px-2.5 py-0.5 text-[13px] font-medium whitespace-nowrap text-[#7a1610] hover:bg-[#fff5f4] dark:border-red-800 dark:bg-transparent dark:text-red-200 dark:hover:bg-red-950"
+                    className="rounded-full border border-danger-border bg-card px-2.5 py-0.5 text-[13px] font-medium whitespace-nowrap text-danger-soft-foreground hover:bg-danger-soft"
                 >
                     <span className="font-mono">#{assignment.orderId}</span>{' '}
                     {assignment.customer} · late by{' '}

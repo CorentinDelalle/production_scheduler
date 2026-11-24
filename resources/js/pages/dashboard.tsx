@@ -204,7 +204,7 @@ export default function Dashboard({
                                     Changeover
                                 </li>
                                 <li className="flex items-center gap-1.5">
-                                    <span className="inline-flex items-center gap-0.5 rounded-[4px] bg-[#b42318] px-1.5 text-[11px] font-bold text-white">
+                                    <span className="inline-flex items-center gap-0.5 rounded-[4px] bg-danger px-1.5 text-[11px] font-bold text-danger-foreground">
                                         <TriangleAlert
                                             className="size-2.5"
                                             aria-hidden

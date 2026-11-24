@@ -113,7 +113,7 @@
 
 .production-timeline .vis-item.vis-range.tl-production.tl-late,
 .production-timeline .vis-item.vis-range.tl-production.tl-late.vis-selected {
-    border: 2px solid #b42318;
+    border: 2px solid var(--danger);
 }
 
 .production-timeline .vis-item.vis-range.tl-production.vis-selected {
@@ -152,8 +152,8 @@
     align-items: center;
     gap: 2px;
     flex: none;
-    background: #b42318;
-    color: #fff;
+    background: var(--danger);
+    color: var(--danger-foreground);
     border-radius: 4px;
     padding: 0 4px;
     font-size: 10px;
@@ -200,7 +200,7 @@
 .production-timeline .vis-custom-time.tl-due {
     width: 0;
     background: transparent;
-    border-left: 2px dashed #b42318;
+    border-left: 2px dashed var(--danger);
     pointer-events: none;
     z-index: 3;
 }
@@ -210,8 +210,8 @@
     position: absolute;
     top: 2px;
     left: 3px;
-    background: #b42318;
-    color: #fff;
+    background: var(--danger);
+    color: var(--danger-foreground);
     font-size: 10px;
     font-weight: 600;
     border-radius: 3px;
