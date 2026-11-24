@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Concerns\PresentsOrders;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\ScheduleRequest;
-use App\Models\Machine;
 use App\Models\Order;
 use App\Services\Assignment;
 use App\Services\Scheduler;
@@ -22,35 +21,22 @@ class OrderController extends Controller
     {
         $start = $request->startDate();
 
-        $orders = Order::with(['customer', 'productType', 'items.product'])
-            ->orderBy('need_by_date')
-            ->orderBy('id')
-            ->get();
-        $machines = Machine::orderBy('id')->get();
+        $plan = $this->plan($scheduler, $start);
+        $machineNames = $plan['machines']->pluck('name', 'id');
 
         /** @var array<int, Assignment> $assignments */
         $assignments = [];
-        if ($machines->isNotEmpty()) {
-            foreach ($scheduler->schedule($orders, $machines, $start) as $assignment) {
-                $assignments[$assignment->order->id] = $assignment;
-            }
+        foreach ($plan['assignments'] as $assignment) {
+            $assignments[$assignment->order->id] = $assignment;
         }
 
         return Inertia::render('orders/index', [
             'start' => $start->toDateString(),
             'timezone' => config('app.schedule_timezone'),
-            'orders' => $orders->map(fn (Order $order) => [
+            'orders' => $plan['orders']->map(fn (Order $order) => [
                 'id' => $order->id,
-                'customerId' => $order->customer_id,
-                'customer' => $order->customer->name,
-                'productTypeId' => $order->product_type_id,
-                'productType' => $order->productType->name,
-                'needByDate' => $order->need_by_date->toDateString(),
-                'quantity' => (int) $order->items->sum('quantity'),
-                'items' => $this->orderItemsToArray($order),
-                'machine' => isset($assignments[$order->id])
-                    ? $machines->firstWhere('id', $assignments[$order->id]->machineId)?->name
-                    : null,
+                ...$this->orderToArray($order),
+                'machine' => isset($assignments[$order->id]) ? $machineNames[$assignments[$order->id]->machineId] : null,
                 'end' => ($assignments[$order->id] ?? null)?->end->toIso8601String(),
                 'isLate' => ($assignments[$order->id] ?? null)?->isLate,
             ])->all(),
