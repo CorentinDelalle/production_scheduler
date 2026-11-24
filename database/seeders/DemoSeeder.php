@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,19 +21,27 @@ class DemoSeeder extends Seeder
      * Each order: customer, days from today to the need-by date, and quantity per product.
      * All products of an order share the same type.
      *
+     * Need-by dates start six days out, so no order falls due during the review window
+     * (up to five days after seeding). The large Evergreen Books run takes over seven days
+     * on its own, so the plan shows exactly one late order on each of those days.
+     *
      * @var list<array{customer: string, need_by_in_days: int, items: array<string, int>}>
      */
     private const ORDERS = [
-        ['customer' => 'Acme Packaging', 'need_by_in_days' => 1, 'items' => ['A' => 4000, 'B' => 3000]],
-        ['customer' => 'Brightside Foods', 'need_by_in_days' => 1, 'items' => ['D' => 6000]],
-        ['customer' => 'Evergreen Books', 'need_by_in_days' => 1, 'items' => ['B' => 15000]],
-        ['customer' => 'Coastal Retail', 'need_by_in_days' => 2, 'items' => ['F' => 5000]],
-        ['customer' => 'Delta Pharma', 'need_by_in_days' => 2, 'items' => ['C' => 9000]],
-        ['customer' => 'Delta Pharma', 'need_by_in_days' => 2, 'items' => ['E' => 12000]],
-        ['customer' => 'Acme Packaging', 'need_by_in_days' => 3, 'items' => ['D' => 3000, 'E' => 5000]],
-        ['customer' => 'Brightside Foods', 'need_by_in_days' => 3, 'items' => ['A' => 6000]],
-        ['customer' => 'Coastal Retail', 'need_by_in_days' => 4, 'items' => ['C' => 4000]],
-        ['customer' => 'Evergreen Books', 'need_by_in_days' => 5, 'items' => ['C' => 7000]],
+        ['customer' => 'Evergreen Books', 'need_by_in_days' => 6, 'items' => ['B' => 125000]],
+        ['customer' => 'Acme Packaging', 'need_by_in_days' => 6, 'items' => ['D' => 12000]],
+        ['customer' => 'Brightside Foods', 'need_by_in_days' => 7, 'items' => ['A' => 8000]],
+        ['customer' => 'Coastal Retail', 'need_by_in_days' => 8, 'items' => ['C' => 15000]],
+        ['customer' => 'Delta Pharma', 'need_by_in_days' => 9, 'items' => ['E' => 20000]],
+        ['customer' => 'Acme Packaging', 'need_by_in_days' => 9, 'items' => ['D' => 8000, 'E' => 6000]],
+        ['customer' => 'Brightside Foods', 'need_by_in_days' => 10, 'items' => ['F' => 10000]],
+        ['customer' => 'Coastal Retail', 'need_by_in_days' => 12, 'items' => ['C' => 12000]],
+        ['customer' => 'Delta Pharma', 'need_by_in_days' => 13, 'items' => ['A' => 9000, 'F' => 6000]],
+        ['customer' => 'Evergreen Books', 'need_by_in_days' => 14, 'items' => ['C' => 10000]],
+        ['customer' => 'Acme Packaging', 'need_by_in_days' => 15, 'items' => ['B' => 14000]],
+        ['customer' => 'Brightside Foods', 'need_by_in_days' => 16, 'items' => ['D' => 16000]],
+        ['customer' => 'Coastal Retail', 'need_by_in_days' => 18, 'items' => ['E' => 10000]],
+        ['customer' => 'Delta Pharma', 'need_by_in_days' => 20, 'items' => ['C' => 8000]],
     ];
 
     /**
@@ -49,6 +58,7 @@ class DemoSeeder extends Seeder
         }
 
         $products = Product::all()->keyBy('name');
+        $today = CarbonImmutable::now(config('app.schedule_timezone'))->startOfDay();
 
         foreach (self::ORDERS as $demoOrder) {
             $orderProducts = collect($demoOrder['items'])->keys()->map(fn (string $name) => $products[$name]);
@@ -56,7 +66,7 @@ class DemoSeeder extends Seeder
             $order = Order::create([
                 'customer_id' => Customer::firstOrCreate(['name' => $demoOrder['customer']])->id,
                 'product_type_id' => $orderProducts->first()->product_type_id,
-                'need_by_date' => today()->addDays($demoOrder['need_by_in_days']),
+                'need_by_date' => $today->addDays($demoOrder['need_by_in_days'])->toDateString(),
             ]);
 
             foreach ($orderProducts as $product) {
