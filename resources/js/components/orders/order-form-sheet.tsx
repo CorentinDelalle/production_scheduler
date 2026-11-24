@@ -90,7 +90,8 @@ export default function OrderFormSheet({
     const [typeChangeNote, setTypeChangeNote] = useState(false);
     const fieldErrors = errors as Record<string, string | undefined>;
 
-    // Start from a clean form whenever the sheet opens or targets another order.
+    // Start from a clean form when the sheet opens or targets another order. Keyed on the id:
+    // reloaded props (e.g. after a validation error) must not wipe what the user typed.
     useEffect(() => {
         if (open) {
             form.setData(initialData(order));
@@ -98,7 +99,7 @@ export default function OrderFormSheet({
             setTypeChangeNote(false);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, order]);
+    }, [open, order?.id]);
 
     const selectedType = productTypes.find(
         (type) => String(type.id) === data.product_type_id,

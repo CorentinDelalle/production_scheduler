@@ -1,6 +1,5 @@
-import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { Plus } from 'lucide-react';
 
 import {
     destroy,
@@ -12,9 +11,12 @@ import CatalogSheet from '@/components/catalog/catalog-sheet';
 import DeleteDialog from '@/components/delete-dialog';
 import EmptyState from '@/components/empty-state';
 import InputError from '@/components/input-error';
+import PageHeader from '@/components/page-header';
+import RowActions from '@/components/row-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCrudState } from '@/hooks/use-crud-state';
 import { formatCount, formatNumber } from '@/lib/format';
 import type { Customer } from '@/types';
 
@@ -23,46 +25,19 @@ type Props = {
 };
 
 export default function CustomersIndex({ customers }: Props) {
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [processing, setProcessing] = useState(false);
-
-    const editing =
-        customers.find((customer) => customer.id === editingId) ?? null;
-    const deleting =
-        customers.find((customer) => customer.id === deletingId) ?? null;
-
-    function openNew(): void {
-        setEditingId(null);
-        setSheetOpen(true);
-    }
-
-    function openEdit(customer: Customer): void {
-        setEditingId(customer.id);
-        setSheetOpen(true);
-    }
-
-    function openDelete(customer: Customer): void {
-        setDeletingId(customer.id);
-        setDeleteOpen(true);
-    }
-
-    function confirmDelete(): void {
-        if (!deleting) {
-            return;
-        }
-
-        router.delete(destroy.url(deleting.id), {
-            preserveScroll: true,
-            onStart: () => setProcessing(true),
-            onFinish: () => {
-                setProcessing(false);
-                setDeleteOpen(false);
-            },
-        });
-    }
+    const {
+        sheetOpen,
+        setSheetOpen,
+        editing,
+        deleteOpen,
+        setDeleteOpen,
+        deleting,
+        processing,
+        openNew,
+        openEdit,
+        openDelete,
+        confirmDelete,
+    } = useCrudState(customers, (id) => destroy.url(id));
 
     const isBlocked = deleting !== null && deleting.ordersCount > 0;
 
@@ -71,21 +46,16 @@ export default function CustomersIndex({ customers }: Props) {
             <Head title="Customers" />
 
             <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 md:gap-6 md:p-6">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Customers
-                        </h1>
-                        <p className="max-w-xl text-sm text-muted-foreground">
-                            Companies you print for. A customer can’t be deleted
-                            while it has orders.
-                        </p>
-                    </div>
-                    <Button variant="outline" onClick={openNew}>
-                        <Plus />
-                        Add customer
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Customers"
+                    description="Companies you print for. A customer can’t be deleted while it has orders."
+                    actions={
+                        <Button variant="outline" onClick={openNew}>
+                            <Plus />
+                            Add customer
+                        </Button>
+                    }
+                />
 
                 {customers.length === 0 ? (
                     <EmptyState
@@ -127,32 +97,15 @@ export default function CustomersIndex({ customers }: Props) {
                                             {formatNumber(customer.ordersCount)}
                                         </td>
                                         <td className="px-4">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-10"
-                                                    title="Edit"
-                                                    aria-label={`Edit ${customer.name}`}
-                                                    onClick={() =>
-                                                        openEdit(customer)
-                                                    }
-                                                >
-                                                    <Pencil />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-10 text-danger hover:bg-danger-soft hover:text-danger"
-                                                    title="Delete"
-                                                    aria-label={`Delete ${customer.name}`}
-                                                    onClick={() =>
-                                                        openDelete(customer)
-                                                    }
-                                                >
-                                                    <Trash2 />
-                                                </Button>
-                                            </div>
+                                            <RowActions
+                                                label={customer.name}
+                                                onEdit={() =>
+                                                    openEdit(customer)
+                                                }
+                                                onDelete={() =>
+                                                    openDelete(customer)
+                                                }
+                                            />
                                         </td>
                                     </tr>
                                 ))}

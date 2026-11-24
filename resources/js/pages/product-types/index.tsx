@@ -1,6 +1,5 @@
-import { Head, router } from '@inertiajs/react';
-import { Info, Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { Info, Plus } from 'lucide-react';
 
 import {
     destroy,
@@ -12,10 +11,13 @@ import CatalogSheet from '@/components/catalog/catalog-sheet';
 import DeleteDialog from '@/components/delete-dialog';
 import EmptyState from '@/components/empty-state';
 import InputError from '@/components/input-error';
+import PageHeader from '@/components/page-header';
+import RowActions from '@/components/row-actions';
 import TypeSwatch from '@/components/type-swatch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCrudState } from '@/hooks/use-crud-state';
 import { formatCount, formatNumber } from '@/lib/format';
 import type { ProductType } from '@/types';
 
@@ -24,48 +26,19 @@ type Props = {
 };
 
 export default function ProductTypesIndex({ productTypes }: Props) {
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
-    const [processing, setProcessing] = useState(false);
-
-    const editing =
-        productTypes.find((productType) => productType.id === editingId) ??
-        null;
-    const deleting =
-        productTypes.find((productType) => productType.id === deletingId) ??
-        null;
-
-    function openNew(): void {
-        setEditingId(null);
-        setSheetOpen(true);
-    }
-
-    function openEdit(productType: ProductType): void {
-        setEditingId(productType.id);
-        setSheetOpen(true);
-    }
-
-    function openDelete(productType: ProductType): void {
-        setDeletingId(productType.id);
-        setDeleteOpen(true);
-    }
-
-    function confirmDelete(): void {
-        if (!deleting) {
-            return;
-        }
-
-        router.delete(destroy.url(deleting.id), {
-            preserveScroll: true,
-            onStart: () => setProcessing(true),
-            onFinish: () => {
-                setProcessing(false);
-                setDeleteOpen(false);
-            },
-        });
-    }
+    const {
+        sheetOpen,
+        setSheetOpen,
+        editing,
+        deleteOpen,
+        setDeleteOpen,
+        deleting,
+        processing,
+        openNew,
+        openEdit,
+        openDelete,
+        confirmDelete,
+    } = useCrudState(productTypes, (id) => destroy.url(id));
 
     const usageParts = deleting
         ? [
@@ -82,21 +55,16 @@ export default function ProductTypesIndex({ productTypes }: Props) {
             <Head title="Product types" />
 
             <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 md:gap-6 md:p-6">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Product types
-                        </h1>
-                        <p className="max-w-xl text-sm text-muted-foreground">
-                            Speed and changeover time drive the plan. Editing
-                            them recalculates every order of that type.
-                        </p>
-                    </div>
-                    <Button variant="outline" onClick={openNew}>
-                        <Plus />
-                        Add product type
-                    </Button>
-                </div>
+                <PageHeader
+                    title="Product types"
+                    description="Speed and changeover time drive the plan. Editing them recalculates every order of that type."
+                    actions={
+                        <Button variant="outline" onClick={openNew}>
+                            <Plus />
+                            Add product type
+                        </Button>
+                    }
+                />
 
                 {productTypes.length === 0 ? (
                     <EmptyState
@@ -170,32 +138,15 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                                             )}
                                         </td>
                                         <td className="px-4">
-                                            <div className="flex justify-end gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-10"
-                                                    title="Edit"
-                                                    aria-label={`Edit ${productType.name}`}
-                                                    onClick={() =>
-                                                        openEdit(productType)
-                                                    }
-                                                >
-                                                    <Pencil />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="size-10 text-danger hover:bg-danger-soft hover:text-danger"
-                                                    title="Delete"
-                                                    aria-label={`Delete ${productType.name}`}
-                                                    onClick={() =>
-                                                        openDelete(productType)
-                                                    }
-                                                >
-                                                    <Trash2 />
-                                                </Button>
-                                            </div>
+                                            <RowActions
+                                                label={productType.name}
+                                                onEdit={() =>
+                                                    openEdit(productType)
+                                                }
+                                                onDelete={() =>
+                                                    openDelete(productType)
+                                                }
+                                            />
                                         </td>
                                     </tr>
                                 ))}

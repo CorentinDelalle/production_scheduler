@@ -1,18 +1,21 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { ClipboardList, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { ClipboardList, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import DeleteDialog from '@/components/delete-dialog';
 import EmptyState from '@/components/empty-state';
 import OrderFormSheet from '@/components/orders/order-form-sheet';
 import OrderStatusBadge from '@/components/orders/order-status-badge';
+import PageHeader from '@/components/page-header';
+import RowActions from '@/components/row-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TypeSwatch from '@/components/type-swatch';
+import { useCrudState } from '@/hooks/use-crud-state';
 import { formatDateTime, formatDay, formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { destroy } from '@/actions/App/Http/Controllers/OrderController';
 import { index } from '@/routes/orders';
-import type { EditableOrder, OrderFormOptions, OrderRow } from '@/types';
+import type { OrderFormOptions, OrderRow } from '@/types';
 
 type Props = OrderFormOptions & {
     start: string;
@@ -35,10 +38,19 @@ export default function Orders({
 
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState<Filter>('all');
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editing, setEditing] = useState<EditableOrder | null>(null);
-    const [deleting, setDeleting] = useState<OrderRow | null>(null);
-    const [processing, setProcessing] = useState(false);
+    const {
+        sheetOpen,
+        setSheetOpen,
+        editing,
+        deleteOpen,
+        setDeleteOpen,
+        deleting,
+        processing,
+        openNew,
+        openEdit,
+        openDelete,
+        confirmDelete,
+    } = useCrudState(orders, (id) => destroy.url(id));
 
     const lateCount = orders.filter((o) => o.isLate === true).length;
     const onTimeCount = orders.filter((o) => o.isLate === false).length;
@@ -61,34 +73,9 @@ export default function Orders({
         );
     });
 
-    function openNew() {
-        setEditing(null);
-        setSheetOpen(true);
-    }
-
-    function openEdit(order: OrderRow) {
-        setEditing(order);
-        setSheetOpen(true);
-    }
-
     function clearFilters() {
         setQuery('');
         setFilter('all');
-    }
-
-    function confirmDelete() {
-        if (!deleting) {
-            return;
-        }
-
-        router.delete(destroy(deleting.id).url, {
-            preserveScroll: true,
-            onStart: () => setProcessing(true),
-            onFinish: () => {
-                setProcessing(false);
-                setDeleting(null);
-            },
-        });
     }
 
     const filters: { key: Filter; label: string }[] = [
@@ -108,19 +95,11 @@ export default function Orders({
         <>
             <Head title="Orders" />
             <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 md:gap-6 md:p-6">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">
-                            Orders
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            {orders.length}{' '}
-                            {orders.length === 1 ? 'order' : 'orders'} ·{' '}
-                            {lateCount} late
-                        </p>
-                    </div>
-                    {newOrderButton}
-                </div>
+                <PageHeader
+                    title="Orders"
+                    description={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'} · ${lateCount} late`}
+                    actions={newOrderButton}
+                />
 
                 {orders.length === 0 ? (
                     <EmptyState
@@ -299,23 +278,19 @@ export default function Orders({
                                                             )}
                                                         </td>
                                                         <td className="px-4">
-                                                            <div className="flex justify-end gap-1">
-                                                                <RowActions
-                                                                    order={
-                                                                        order
-                                                                    }
-                                                                    onEdit={() =>
-                                                                        openEdit(
-                                                                            order,
-                                                                        )
-                                                                    }
-                                                                    onDelete={() =>
-                                                                        setDeleting(
-                                                                            order,
-                                                                        )
-                                                                    }
-                                                                />
-                                                            </div>
+                                                            <RowActions
+                                                                label={`order #${order.id}`}
+                                                                onEdit={() =>
+                                                                    openEdit(
+                                                                        order,
+                                                                    )
+                                                                }
+                                                                onDelete={() =>
+                                                                    openDelete(
+                                                                        order,
+                                                                    )
+                                                                }
+                                                            />
                                                         </td>
                                                     </tr>
                                                 );
@@ -395,17 +370,16 @@ export default function Orders({
                                                         />
                                                     )}
                                                 </button>
-                                                <div className="flex flex-col gap-1">
-                                                    <RowActions
-                                                        order={order}
-                                                        onEdit={() =>
-                                                            openEdit(order)
-                                                        }
-                                                        onDelete={() =>
-                                                            setDeleting(order)
-                                                        }
-                                                    />
-                                                </div>
+                                                <RowActions
+                                                    label={`order #${order.id}`}
+                                                    onEdit={() =>
+                                                        openEdit(order)
+                                                    }
+                                                    onDelete={() =>
+                                                        openDelete(order)
+                                                    }
+                                                    className="flex-col justify-start"
+                                                />
                                             </li>
                                         );
                                     })}
@@ -424,23 +398,17 @@ export default function Orders({
                 productTypes={productTypes}
             />
 
-            <DeleteDialog
-                open={deleting !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDeleting(null);
-                    }
-                }}
-                title={deleting ? `Delete order #${deleting.id}?` : ''}
-                description={
-                    deleting
-                        ? `${deleting.customer} · ${formatNumber(deleting.quantity)} units. The plan will be recalculated without it.`
-                        : ''
-                }
-                confirmLabel="Delete order"
-                onConfirm={confirmDelete}
-                processing={processing}
-            />
+            {deleting && (
+                <DeleteDialog
+                    open={deleteOpen}
+                    onOpenChange={setDeleteOpen}
+                    title={`Delete order #${deleting.id}?`}
+                    description={`${deleting.customer} · ${formatNumber(deleting.quantity)} units. The plan will be recalculated without it.`}
+                    confirmLabel="Delete order"
+                    onConfirm={confirmDelete}
+                    processing={processing}
+                />
+            )}
         </>
     );
 }
@@ -450,42 +418,6 @@ function UpdatedTag() {
         <span className="ml-2 rounded bg-primary px-1.5 py-px text-[11px] font-bold text-primary-foreground">
             Updated
         </span>
-    );
-}
-
-function RowActions({
-    order,
-    onEdit,
-    onDelete,
-}: {
-    order: OrderRow;
-    onEdit: () => void;
-    onDelete: () => void;
-}) {
-    return (
-        <>
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onEdit}
-                aria-label={`Edit order #${order.id}`}
-                title="Edit"
-            >
-                <Pencil />
-            </Button>
-            <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={onDelete}
-                aria-label={`Delete order #${order.id}`}
-                title="Delete"
-                className="text-danger hover:bg-danger-soft hover:text-danger"
-            >
-                <Trash2 />
-            </Button>
-        </>
     );
 }
 
