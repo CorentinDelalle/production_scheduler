@@ -55,7 +55,7 @@ export default function Dashboard({
             return;
         }
 
-        setHighlightId(Number(flashedHighlight));
+        setHighlightId(flashedHighlight);
         const timer = setTimeout(() => setHighlightId(null), 5000);
 
         return () => clearTimeout(timer);

@@ -30,7 +30,7 @@ export default function Orders({
     customers,
     productTypes,
 }: Props) {
-    const flash = usePage().flash as { highlight?: number } | undefined;
+    const flash = usePage().flash;
     const highlightId = flash?.highlight;
 
     const [query, setQuery] = useState('');

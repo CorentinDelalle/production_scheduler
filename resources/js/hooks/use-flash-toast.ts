@@ -7,7 +7,7 @@ export function useFlashToast(): void {
     useEffect(() => {
         return router.on('flash', (event) => {
             const flash = (event as CustomEvent).detail?.flash;
-            const data = flash?.toast as FlashToast | undefined;
+            const data: FlashToast | undefined = flash?.toast;
 
             if (!data) {
                 return;
