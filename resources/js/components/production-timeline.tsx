@@ -46,6 +46,7 @@ const WARNING_ICON =
 
 /** Tags and attributes the item and group templates need through vis-timeline's XSS filter. */
 const TEMPLATE_TAGS = {
+    br: [],
     div: ['class'],
     span: ['class'],
     svg: [
@@ -317,6 +318,7 @@ export default function ProductionTimeline({
         const assignment = assignments.find(
             (candidate) => candidate.orderId === selectedOrderId,
         );
+        let labelFrame = 0;
 
         if (assignment) {
             const due = needByDeadline(assignment.needByDate, timezone);
@@ -324,13 +326,16 @@ export default function ProductionTimeline({
 
             timeline.addCustomTime(due, 'tl-due');
             timeline.setCustomTimeTitle(label, 'tl-due');
-            const bar = containerRef.current?.querySelector<HTMLElement>(
-                '.vis-custom-time.tl-due',
-            );
+            // vis-timeline attaches the marker on its next redraw: label it afterwards.
+            labelFrame = requestAnimationFrame(() => {
+                const bar = containerRef.current?.querySelector<HTMLElement>(
+                    '.vis-custom-time.tl-due',
+                );
 
-            if (bar) {
-                bar.dataset.label = label;
-            }
+                if (bar) {
+                    bar.dataset.label = label;
+                }
+            });
         } else if (selectedOrderId === null && highlightOrderId !== null) {
             timeline.focus(`order-${highlightOrderId}`, {
                 animation: false,
@@ -339,6 +344,8 @@ export default function ProductionTimeline({
         }
 
         return () => {
+            cancelAnimationFrame(labelFrame);
+
             try {
                 timeline.removeCustomTime('tl-due');
             } catch {

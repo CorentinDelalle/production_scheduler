@@ -101,7 +101,11 @@ export default function OrderDetailSheet({
 
     return (
         <>
-            <Sheet open onOpenChange={(open) => !open && onClose()}>
+            <Sheet
+                open
+                modal={false}
+                onOpenChange={(open) => !open && onClose()}
+            >
                 <SheetContent className="w-full gap-0 sm:max-w-md">
                     <SheetHeader className="border-b pr-14 pl-6">
                         <div className="flex flex-wrap items-center gap-2.5">
