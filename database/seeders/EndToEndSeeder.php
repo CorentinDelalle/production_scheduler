@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
  *
  * Planned from 2030-01-07 on Machine 1 and Machine 2, the two orders give a known plan:
  * - Northwind (Type 1, 7,150 × A, due Jan 7): Machine 1, 00:30 to 10:30, on time;
- * - Late Labels (Type 3, 30,000 × D, due Jan 7): Machine 2, 00:30 to Jan 8 06:30, late.
+ * - Last Call Lager (Type 3, 30,000 × D, due Jan 7): Machine 2, 00:30 to Jan 8 06:30, late.
  *
  * The Northwind name holds a tag that vis-timeline's own XSS filter lets through (a span with a class),
  * to check that our escaping shows it as text.
@@ -26,12 +26,12 @@ class EndToEndSeeder extends Seeder
     {
         $this->call(DatabaseSeeder::class);
 
-        $northwind = Customer::create(['name' => 'Northwind <span class="injected">Print</span> & Co']);
-        $lateLabels = Customer::create(['name' => 'Late Labels']);
-        Customer::create(['name' => 'Harbor Cafe']);
+        $northwind = Customer::create(['name' => 'Northwind <span class="injected">Cider</span> & Co']);
+        $lastCallLager = Customer::create(['name' => 'Last Call Lager']);
+        Customer::create(['name' => 'Harbor Iced Tea']);
 
         $this->createOrder($northwind->id, '2030-01-07', 'A', 7150);
-        $this->createOrder($lateLabels->id, '2030-01-07', 'D', 30000);
+        $this->createOrder($lastCallLager->id, '2030-01-07', 'D', 30000);
     }
 
     private function createOrder(int $customerId, string $needByDate, string $productName, int $quantity): void

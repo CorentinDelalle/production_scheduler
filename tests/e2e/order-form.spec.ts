@@ -37,7 +37,7 @@ test('a server error shows on the product line it belongs to', async ({
     page,
 }) => {
     await openNewOrder(page);
-    await pickOption(page, 'Customer', 'Harbor Cafe');
+    await pickOption(page, 'Customer', 'Harbor Iced Tea');
     await page.getByRole('radio', { name: /Type 1/ }).click();
     await pickOption(page, 'Product, line 1', 'A');
     await page.getByLabel('Quantity, line 1').fill('100');
@@ -78,7 +78,7 @@ test('a new order appears on the plan and in the orders list', async ({
     page,
 }) => {
     await openNewOrder(page);
-    await pickOption(page, 'Customer', 'Harbor Cafe');
+    await pickOption(page, 'Customer', 'Harbor Iced Tea');
     await page.getByRole('radio', { name: /Type 2/ }).click();
     await pickOption(page, 'Product, line 1', 'C');
     await page.getByLabel('Quantity, line 1').fill('770');
@@ -91,10 +91,10 @@ test('a new order appears on the plan and in the orders list', async ({
     await expect(
         page
             .locator('.vis-item.tl-production')
-            .filter({ hasText: 'Harbor Cafe' }),
+            .filter({ hasText: 'Harbor Iced Tea' }),
     ).toBeVisible();
 
     await page.goto('/orders?start=2030-01-07');
 
-    await expect(page.getByText('Harbor Cafe').first()).toBeVisible();
+    await expect(page.getByText('Harbor Iced Tea').first()).toBeVisible();
 });

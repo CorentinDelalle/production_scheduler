@@ -31,7 +31,7 @@ test('the timeline places each order on its machine and flags the late one', asy
     page,
 }) => {
     const onTime = block(page, 'Northwind');
-    const late = block(page, 'Late Labels');
+    const late = block(page, 'Last Call Lager');
 
     await expect(onTime).toBeVisible();
     await expect(late).toBeVisible();
@@ -45,7 +45,7 @@ test('the timeline places each order on its machine and flags the late one', asy
 test('the timeline shows times in Montreal, whatever the browser timezone', async ({
     page,
 }) => {
-    await block(page, 'Late Labels').hover();
+    await block(page, 'Last Call Lager').hover();
 
     await expect(page.locator('.vis-tooltip')).toContainText(
         'Mon 7 Jan, 00:30 to Tue 8 Jan, 06:30',
@@ -58,7 +58,7 @@ test('a customer name with markup is shown as text on the timeline', async ({
     const item = block(page, 'Northwind');
 
     await expect(item).toContainText(
-        'Northwind <span class="injected">Print</span> & Co',
+        'Northwind <span class="injected">Cider</span> & Co',
     );
     await expect(item.locator('.injected')).toHaveCount(0);
 });
@@ -75,6 +75,6 @@ test('the orders page keeps the start date chosen on the plan', async ({
     await expect(ordersLink).toHaveAttribute('data-active', 'true');
     await expect(page.getByText('planned from Mon 7 Jan')).toBeVisible();
     await expect(
-        page.getByRole('row').filter({ hasText: 'Late Labels' }),
+        page.getByRole('row').filter({ hasText: 'Last Call Lager' }),
     ).not.toContainText('On time');
 });
