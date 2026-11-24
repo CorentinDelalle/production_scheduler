@@ -42,7 +42,8 @@ export default function PlanKpis({
 }: Props) {
     const last = assignments.reduce<ScheduleAssignment | null>(
         (latest, assignment) =>
-            latest === null || assignment.end > latest.end
+            latest === null ||
+            Date.parse(assignment.end) > Date.parse(latest.end)
                 ? assignment
                 : latest,
         null,

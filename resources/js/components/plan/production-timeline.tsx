@@ -160,7 +160,8 @@ function buildGroups(
         );
         const free = own.reduce<string | null>(
             (latest, assignment) =>
-                latest === null || assignment.end > latest
+                latest === null ||
+                Date.parse(assignment.end) > Date.parse(latest)
                     ? assignment.end
                     : latest,
             null,

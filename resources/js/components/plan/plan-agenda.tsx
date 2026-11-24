@@ -51,7 +51,11 @@ export default function PlanAgenda({
         machines.find((machine) => machine.id === machineId) ?? machines[0];
     const sequence = assignments
         .filter((assignment) => assignment.machineId === current?.id)
-        .sort((a, b) => a.changeoverStart.localeCompare(b.changeoverStart));
+        // Compare instants, not strings: offsets change with daylight saving time.
+        .sort(
+            (a, b) =>
+                Date.parse(a.changeoverStart) - Date.parse(b.changeoverStart),
+        );
 
     return (
         <section aria-label="Plan by machine" className="flex flex-col gap-3">
