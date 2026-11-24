@@ -107,7 +107,7 @@ Laravel 13, Inertia v3 with React and TypeScript, Tailwind CSS v4 and shadcn/ui 
 
 ### What AI did
 
-Implementation was done with Claude Code, following instructions and context I defined (see `CLAUDE.md`). Laravel Boost (in `composer.json`) generates the framework guidelines in `CLAUDE.md` and `AGENTS.md` and gives the agent an MCP server on the app, which made that context easier to set up.
+Implementation was done with Claude Code, following instructions and context I defined (see `CLAUDE.md`). Laravel Boost (in `composer.json`) generates the framework guidelines in `CLAUDE.md` and gives the agent an MCP server on the app, which made that context easier to set up.
 
 ### How I verified it
 
