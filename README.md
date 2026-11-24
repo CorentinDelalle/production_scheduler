@@ -1,8 +1,8 @@
 # Production Scheduler
 
-A Laravel application that plans print production for Hart Print: orders go in, a production schedule comes out. It prioritises need-by dates and factors in production speed per product type and changeover time between types.
+A Laravel application that plans print production: orders go in, a production schedule comes out. It prioritises need-by dates and factors in production speed per product type and changeover time between types.
 
-Built for the Hart Print technical test "Laravel Production Schedule Optimization".
+Built as a technical test: "Laravel Production Schedule Optimization".
 
 ## Live demo
 
@@ -36,8 +36,8 @@ The schedule is computed on every view, not stored. The reasons, the assumptions
 Requirements: PHP 8.4, Composer, Node.js 22.18+ or 24.11+. The database is a SQLite file, so there is nothing else to install.
 
 ```bash
-git clone <repository-url> production-scheduler
-cd production-scheduler
+git clone https://github.com/CorentinDelalle/production_scheduler.git
+cd production_scheduler
 composer setup
 ```
 

@@ -90,7 +90,7 @@ Ties always resolve the same way, so the plan is deterministic and testable.
 
 ## 5. Stack, auth and deployment
 
-- **Laravel + Inertia (no SSR) + React.** React is what Hart Print uses and what I know best. Inertia avoids a separate API for a single app.
+- **Laravel + Inertia (no SSR) + React.** React is the hiring team's stack and what I know best. Inertia avoids a separate API for a single app.
 - **PostgreSQL in production, SQLite locally and in tests.** Managed PostgreSQL is simpler to deploy than a SQLite file on a volume. SQLite needs no setup and gives fast in-memory tests. The gap is a small risk: the scheduling runs in PHP, and queries stay on standard Eloquent.
 - **Railway**: automatic deploys from `main` once CI passes. Migrations and the idempotent reference-data seeder run before each deploy, the cache warm-up at start.
 - **Authentication from the starter kit** (Fortify), kept as-is. One account is seeded from environment variables. No roles. Sign-up stays open: an accepted risk.

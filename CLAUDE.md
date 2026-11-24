@@ -1,4 +1,4 @@
-# Production Scheduler (Hart Print technical test)
+# Production Scheduler (technical test)
 
 @docs/DECISIONS.md
 
