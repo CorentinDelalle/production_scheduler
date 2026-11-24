@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrudState } from '@/hooks/use-crud-state';
-import { formatNumber } from '@/lib/format';
+import { formatDay, formatNumber } from '@/lib/format';
 import { destroy } from '@/actions/App/Http/Controllers/OrderController';
 import { index } from '@/routes/orders';
 import type { OrderFormOptions, OrderRow } from '@/types';
@@ -25,6 +25,7 @@ type Props = OrderFormOptions & {
 type Filter = 'all' | 'onTime' | 'late';
 
 export default function Orders({
+    start,
     timezone,
     orders,
     customers,
@@ -94,7 +95,7 @@ export default function Orders({
             <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 md:gap-6 md:p-6">
                 <PageHeader
                     title="Orders"
-                    description={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'} · ${lateCount} late`}
+                    description={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'} · ${lateCount} late · planned from ${formatDay(start)}`}
                     actions={newOrderButton}
                 />
 

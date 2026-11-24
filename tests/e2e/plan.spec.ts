@@ -62,3 +62,19 @@ test('a customer name with markup is shown as text on the timeline', async ({
     );
     await expect(item.locator('.injected')).toHaveCount(0);
 });
+
+test('the orders page keeps the start date chosen on the plan', async ({
+    page,
+}) => {
+    const ordersLink = page
+        .locator('[data-sidebar="sidebar"]')
+        .getByRole('link', { name: 'Orders' });
+    await ordersLink.click();
+
+    await expect(page).toHaveURL(/\/orders\?start=2030-01-07$/);
+    await expect(ordersLink).toHaveAttribute('data-active', 'true');
+    await expect(page.getByText('planned from Mon 7 Jan')).toBeVisible();
+    await expect(
+        page.getByRole('row').filter({ hasText: 'Late Labels' }),
+    ).not.toContainText('On time');
+});

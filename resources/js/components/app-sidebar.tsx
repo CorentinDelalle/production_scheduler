@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     CalendarRange,
     ClipboardList,
@@ -27,11 +27,6 @@ import { index as productTypesIndex } from '@/routes/product-types';
 import { index as productsIndex } from '@/routes/products';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    { title: 'Plan', href: dashboard(), icon: CalendarRange },
-    { title: 'Orders', href: ordersIndex(), icon: ClipboardList },
-];
-
 const catalogNavItems: NavItem[] = [
     { title: 'Customers', href: customersIndex(), icon: Users },
     { title: 'Product types', href: productTypesIndex(), icon: Layers },
@@ -40,13 +35,23 @@ const catalogNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    // The plan and the orders page share their start date: keep it when moving between them.
+    const start = new URL(usePage().url, 'http://localhost').searchParams.get(
+        'start',
+    );
+    const query = start ? { query: { start } } : undefined;
+    const mainNavItems: NavItem[] = [
+        { title: 'Plan', href: dashboard(query), icon: CalendarRange },
+        { title: 'Orders', href: ordersIndex(query), icon: ClipboardList },
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={dashboard(query)} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
