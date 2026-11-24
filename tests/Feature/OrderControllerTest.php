@@ -151,6 +151,35 @@ class OrderControllerTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
+    public function test_the_need_by_date_cannot_be_before_today_in_the_schedule_timezone(): void
+    {
+        config(['app.schedule_timezone' => 'America/Toronto']);
+        $this->travelTo('2026-11-25 03:00:00 UTC'); // 22:00 on Nov 24 in Montreal.
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('orders.store'), $this->payload(['need_by_date' => '2026-11-23']))
+            ->assertSessionHasErrors(['need_by_date' => 'The need-by date cannot be in the past.']);
+        $this->post(route('orders.store'), $this->payload(['need_by_date' => '2026-11-24']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(1, Order::count());
+    }
+
+    public function test_an_order_due_in_the_past_can_be_updated_if_its_date_is_unchanged(): void
+    {
+        $this->travelTo('2026-11-24 12:00:00 UTC');
+        $order = Order::factory()->for($this->customer)->for($this->type)->create(['need_by_date' => '2026-11-20']);
+        OrderItem::factory()->for($order)->for($this->product)->create(['quantity' => 100]);
+        $this->actingAs(User::factory()->create());
+
+        $this->put(route('orders.update', $order), $this->payload(['need_by_date' => '2026-11-20']))
+            ->assertSessionHasNoErrors();
+        $this->put(route('orders.update', $order), $this->payload(['need_by_date' => '2026-11-21']))
+            ->assertSessionHasErrors('need_by_date');
+
+        $this->assertSame('2026-11-20', $order->refresh()->need_by_date->toDateString());
+    }
+
     public function test_updating_an_order_replaces_its_items(): void
     {
         $order = Order::factory()->for($this->customer)->for($this->type)->create();

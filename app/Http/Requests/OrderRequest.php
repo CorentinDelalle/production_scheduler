@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Order;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,7 +28,11 @@ class OrderRequest extends FormRequest
         return [
             'customer_id' => ['required', 'integer', Rule::exists('customers', 'id')],
             'product_type_id' => ['required', 'integer', Rule::exists('product_types', 'id')],
-            'need_by_date' => ['required', 'date_format:Y-m-d'],
+            'need_by_date' => [
+                'required',
+                'date_format:Y-m-d',
+                Rule::when($this->changesNeedByDate(), 'after_or_equal:'.$this->today()),
+            ],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => [
                 'required',
@@ -63,6 +69,26 @@ class OrderRequest extends FormRequest
         return [
             'items.*.product_id.distinct' => 'This product is already on the order.',
             'items.*.product_id.exists' => 'Choose a product of the selected type.',
+            'need_by_date.after_or_equal' => 'The need-by date cannot be in the past.',
         ];
+    }
+
+    /**
+     * A new order, or an update that changes the need-by date. An existing order whose date
+     * has passed can still be edited as long as its date is kept.
+     */
+    private function changesNeedByDate(): bool
+    {
+        $order = $this->route('order');
+
+        return ! $order instanceof Order || $order->need_by_date->toDateString() !== $this->input('need_by_date');
+    }
+
+    /**
+     * Today's date in the schedule timezone, so "the past" matches the plan, not the server.
+     */
+    private function today(): string
+    {
+        return CarbonImmutable::now(config('app.schedule_timezone'))->toDateString();
     }
 }
