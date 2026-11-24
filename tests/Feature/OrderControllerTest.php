@@ -11,6 +11,7 @@ use App\Models\ProductType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class OrderControllerTest extends TestCase
@@ -142,6 +143,148 @@ class OrderControllerTest extends TestCase
         $this->post(route('orders.store'), $this->payload(['customer_id' => 9999]))->assertSessionHasErrors('customer_id');
 
         $this->assertSame(0, Order::count());
+    }
+
+    /**
+     * @return array<string, array{array<string, mixed>, string}>
+     */
+    public static function invalidOrderFields(): array
+    {
+        return [
+            'no customer' => [['customer_id' => null], 'customer_id'],
+            'no product type' => [['product_type_id' => null], 'product_type_id'],
+            'unknown product type' => [['product_type_id' => 9999], 'product_type_id'],
+            'no need-by date' => [['need_by_date' => null], 'need_by_date'],
+            'impossible need-by date' => [['need_by_date' => '2030-02-30'], 'need_by_date'],
+            'day-first need-by date' => [['need_by_date' => '01/02/2030'], 'need_by_date'],
+            'need-by date with a time' => [['need_by_date' => '2030-01-01 10:00'], 'need_by_date'],
+            'no products' => [['items' => null], 'items'],
+            'products not a list' => [['items' => 'A'], 'items'],
+            'unknown product' => [['items' => [['product_id' => 9999, 'quantity' => 5]]], 'items.0.product_id'],
+            'line without a product' => [['items' => [['quantity' => 5]]], 'items.0.product_id'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    #[DataProvider('invalidOrderFields')]
+    public function test_an_order_with_an_invalid_field_is_rejected(array $overrides, string $field): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('orders.store'), $this->payload($overrides))
+            ->assertSessionHasErrors($field);
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    /**
+     * @return array<string, array{mixed}>
+     */
+    public static function invalidQuantities(): array
+    {
+        return [
+            'missing' => [null],
+            'decimal' => [1.5],
+            'negative' => [-5],
+            'text' => ['ten'],
+        ];
+    }
+
+    #[DataProvider('invalidQuantities')]
+    public function test_an_order_line_with_an_invalid_quantity_is_rejected(mixed $quantity): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('orders.store'), $this->payload(['items' => [['product_id' => $this->product->id, 'quantity' => $quantity]]]))
+            ->assertSessionHasErrors('items.0.quantity');
+
+        $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_a_quantity_of_one_is_accepted(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('orders.store'), $this->payload(['items' => [['product_id' => $this->product->id, 'quantity' => 1]]]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('order_items', ['product_id' => $this->product->id, 'quantity' => 1]);
+    }
+
+    public function test_product_errors_say_how_to_fix_the_line(): void
+    {
+        $otherTypeProduct = Product::factory()->create();
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('orders.store'), $this->payload(['items' => [['product_id' => $otherTypeProduct->id, 'quantity' => 5]]]))
+            ->assertSessionHasErrors(['items.0.product_id' => 'Choose a product of the selected type.']);
+        $this->post(route('orders.store'), $this->payload(['items' => [
+            ['product_id' => $this->product->id, 'quantity' => 5],
+            ['product_id' => $this->product->id, 'quantity' => 5],
+        ]]))->assertSessionHasErrors(['items.1.product_id' => 'This product is already on the order.']);
+    }
+
+    public function test_an_order_changes_type_only_with_products_of_the_new_type(): void
+    {
+        $order = Order::factory()->for($this->customer)->for($this->type)->create();
+        OrderItem::factory()->for($order)->for($this->product)->create();
+        $newType = ProductType::factory()->create();
+        $newTypeProduct = Product::factory()->for($newType)->create();
+        $this->actingAs(User::factory()->create());
+
+        $this->put(route('orders.update', $order), $this->payload(['product_type_id' => $newType->id]))
+            ->assertSessionHasErrors('items.0.product_id');
+        $this->assertSame($this->type->id, $order->refresh()->product_type_id);
+
+        $this->put(route('orders.update', $order), $this->payload([
+            'product_type_id' => $newType->id,
+            'items' => [['product_id' => $newTypeProduct->id, 'quantity' => 10]],
+        ]))->assertSessionHasNoErrors();
+        $this->assertSame($newType->id, $order->refresh()->product_type_id);
+        $this->assertSame($newTypeProduct->id, $order->items()->sole()->product_id);
+    }
+
+    public function test_an_invalid_start_date_is_rejected(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('orders.index', ['start' => '2026-02-30']))
+            ->assertSessionHasErrors('start');
+    }
+
+    public function test_the_orders_page_shows_the_same_planning_as_the_plan(): void
+    {
+        $machines = Machine::factory()->count(2)->create();
+        $otherType = ProductType::factory()->create(['units_per_hour' => 300, 'changeover_minutes' => 45]);
+        $otherTypeProduct = Product::factory()->for($otherType)->create();
+        // Created out of need-by order: the plan loads orders by id, the orders page by need-by date.
+        foreach ([
+            [$this->type, $this->product, '2026-05-08', 6000],
+            [$otherType, $otherTypeProduct, '2026-05-04', 9000],
+            [$this->type, $this->product, '2026-05-04', 30000],
+            [$otherType, $otherTypeProduct, '2026-05-06', 300],
+            [$this->type, $this->product, '2026-05-05', 600],
+        ] as [$type, $product, $needByDate, $quantity]) {
+            $order = Order::factory()->for($this->customer)->for($type)->create(['need_by_date' => $needByDate]);
+            OrderItem::factory()->for($order)->for($product)->create(['quantity' => $quantity]);
+        }
+        $this->actingAs(User::factory()->create());
+
+        $plan = $this->get(route('dashboard', ['start' => '2026-05-04']))->inertiaProps('assignments');
+        $list = $this->get(route('orders.index', ['start' => '2026-05-04']))->inertiaProps('orders');
+
+        $planned = collect($plan)->mapWithKeys(fn (array $assignment) => [$assignment['orderId'] => [
+            'machine' => $machines->firstWhere('id', $assignment['machineId'])?->name,
+            'end' => $assignment['end'],
+            'isLate' => $assignment['isLate'],
+        ]])->sortKeys()->all();
+        $listed = collect($list)->mapWithKeys(fn (array $order) => [$order['id'] => [
+            'machine' => $order['machine'],
+            'end' => $order['end'],
+            'isLate' => $order['isLate'],
+        ]])->sortKeys()->all();
+        $this->assertCount(5, $listed);
+        $this->assertSame($planned, $listed);
+        $this->assertContains(true, array_column($listed, 'isLate'));
+        $this->assertContains(false, array_column($listed, 'isLate'));
     }
 
     public function test_a_quantity_of_one_million_is_accepted(): void

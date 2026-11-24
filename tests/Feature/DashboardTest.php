@@ -10,6 +10,7 @@ use App\Models\ProductType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -71,6 +72,27 @@ class DashboardTest extends TestCase
             $this->get(route('dashboard', ['start' => $start]))
                 ->assertSessionHasErrors('start');
         }
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function malformedStartDates(): array
+    {
+        return [
+            'impossible date' => ['2026-02-30'],
+            'unpadded month and day' => ['2026-5-4'],
+            'day-first date' => ['04/05/2026'],
+            'date with a time' => ['2026-05-04 08:00'],
+        ];
+    }
+
+    #[DataProvider('malformedStartDates')]
+    public function test_a_malformed_start_date_is_rejected(string $start): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->get(route('dashboard', ['start' => $start]))
+            ->assertSessionHasErrors('start');
     }
 
     public function test_it_returns_the_machines_and_assignments(): void
