@@ -2,6 +2,8 @@
 
 How I scoped, modelled and built the production scheduler, and why. Each choice lists the alternatives I left out.
 
+**Context.** A digital printing shop is growing: more products, customers, presses and sites. It needs a tool to plan production so deadlines are met, changeovers cost less, and the short and mid-term load is visible early enough to adjust the organisation. The user is a production manager at ease with software: the app must need no training, give visible feedback on every change, and work desktop first (tablet and mobile second).
+
 ## 1. Scope: user stories
 
 Written for the production manager (the planning team), prioritised with MoSCoW.
@@ -63,7 +65,7 @@ Designed in dbdiagram.io. `users` is Laravel's table, shown simplified: the star
 
 **Computed on every view, not stored.** The schedule is derived from the orders and machines. Storing it would add a second source of truth to invalidate on every change, and at this scale the computation is instant. The algorithm is a pure service class ([`Scheduler`](../app/Services/Scheduler.php): orders, machines and a start date in, assignments out), unit tested without a database.
 
-**The order is the unit of scheduling:** one block on one machine, since the type and the need-by date belong to the order and it is delivered complete. _Left out:_ scheduling each line separately, which could split an order across machines but adds complexity, and the order would only be done at its last line.
+**The order is the unit of scheduling:** one block on one machine, since the type and the need-by date belong to the order and it is delivered complete. _Left out:_ scheduling each line separately (or delivering a late order in batches), which could split an order across machines but adds complexity, and the order would only be done at its last line.
 
 **Algorithm (greedy, v1):**
 
@@ -75,6 +77,8 @@ Designed in dbdiagram.io. `users` is Laravel's table, shown simplified: the star
 
 Ties always resolve the same way, so the plan is deterministic and testable.
 
+**Rush orders and changes need nothing special:** the plan is recomputed on every view, so a rush order with an early need-by date moves ahead at once, and an edited or cancelled order reshapes the plan immediately. The limit is that a job already running can move too (see _Freeze started jobs_).
+
 **Start date** is a page parameter (`?start=`, today by default), shared by the plan and the orders page. It is not stored, like the schedule.
 
 **Display:** the plan is the home page after sign-in (no separate dashboard). The timeline uses **vis-timeline**, one row per machine, rather than a hand-made one. _Left out:_ react-calendar-timeline (React API, but its latest version is still in beta).
@@ -82,7 +86,7 @@ Ties always resolve the same way, so the plan is deterministic and testable.
 ## 4. Assumptions
 
 - **Machines run 24/7**, with no shifts or downtime.
-- **Every order in the database is still to be produced.** A delivered order is deleted. There is no produced / in progress / upcoming status: the plan is recomputed on every view, so a status derived from the clock would change as soon as an urgent order arrives.
+- **Every order in the database is confirmed and still to be produced**: its proof is approved, and a delivered order is deleted. There is no produced / in progress / upcoming status: the plan is recomputed on every view, so a status derived from the clock would change as soon as an urgent order arrives.
 - **Need-by is a date, not a date and time**: the order must be done by the end of that day. With exact times, ties would become rare and the same-type tie-break would almost never apply.
 - **The schedule runs in Montreal time** (`America/Toronto`, config `app.schedule_timezone`), whatever the browser's timezone. The app timezone stays UTC for stored timestamps. Durations are real elapsed minutes, also across a daylight saving change.
 - **Input bounds**: quantity 1 to 1,000,000, speed 1 to 100,000 units/h, changeover 0 to 1,440 minutes, names up to 255 characters, unique for products, types and machines.
@@ -104,8 +108,11 @@ Ties always resolve the same way, so the plan is deterministic and testable.
 
 - **Smarter batching (v2):** pull a same-type order ahead to save a changeover when no other order becomes late. Designed and simulated, then left out: it opened several edge cases for a small gain, since one pulled order rarely saves a changeover when the type comes back later.
 - **Freeze started jobs:** a job running on a machine must not move when an urgent order arrives. Needs a `schedule_entries` table (machine, order, start, end), and only the rest is rescheduled.
-- **Produced status:** a nullable `produced_at` set by a "Mark as produced" action. Produced orders leave the scheduler and appear faded in the orders list.
+- **Produced status:** a nullable `produced_at` set by a "Mark as produced" action. Produced orders leave the scheduler and appear faded in the orders list, and the actual end can be compared with the estimate.
 - **Archiving:** soft deletes on orders, for history and statistics.
 - **Need-by time:** a date and time instead of a date, if delivery times matter.
 - **Changeover matrix:** a from/to table if some switches take longer than others.
+- **Safety margin:** flag an order "at risk" when it ends less than N hours before its deadline, to absorb the unexpected.
+- **Machine capabilities and calendar:** per-press setup time and speed, shifts, maintenance and downtime.
+- **Proof approval:** orders awaiting proof shown as tentative, outside the committed plan.
 - **Live planning preview:** show in the order form where the order would land before saving, through an endpoint that runs the scheduler on the draft.
