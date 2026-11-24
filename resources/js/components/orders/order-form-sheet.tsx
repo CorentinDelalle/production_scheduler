@@ -1,8 +1,13 @@
 import { useForm } from '@inertiajs/react';
-import { Check, CircleAlert, Plus, X } from 'lucide-react';
+import { CircleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import TypeSwatch from '@/components/type-swatch';
+import InputError from '@/components/input-error';
+import OrderLinesField, {
+    emptyLine,
+} from '@/components/orders/order-lines-field';
+import type { Line } from '@/components/orders/order-lines-field';
+import OrderTypePicker from '@/components/orders/order-type-picker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,8 +27,6 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { store, update } from '@/actions/App/Http/Controllers/OrderController';
-import { formatNumber } from '@/lib/format';
-import { cn } from '@/lib/utils';
 import type { CustomerOption, EditableOrder, ProductTypeOption } from '@/types';
 
 type Props = {
@@ -34,16 +37,12 @@ type Props = {
     productTypes: ProductTypeOption[];
 };
 
-type Line = { product_id: string; quantity: string };
-
 type FormData = {
     customer_id: string;
     product_type_id: string;
     need_by_date: string;
     items: Line[];
 };
-
-const emptyLine: Line = { product_id: '', quantity: '' };
 
 function initialData(order?: EditableOrder | null): FormData {
     if (!order) {
@@ -64,18 +63,6 @@ function initialData(order?: EditableOrder | null): FormData {
             quantity: String(item.quantity),
         })),
     };
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-    if (!message) {
-        return null;
-    }
-
-    return (
-        <p id={id} role="alert" className="text-sm text-destructive">
-            {message}
-        </p>
-    );
 }
 
 export default function OrderFormSheet({
@@ -104,10 +91,6 @@ export default function OrderFormSheet({
     const selectedType = productTypes.find(
         (type) => String(type.id) === data.product_type_id,
     );
-    const total = data.items.reduce(
-        (sum, line) => sum + (parseInt(line.quantity, 10) || 0),
-        0,
-    );
     const hasErrors = Object.keys(errors).length > 0;
 
     function selectType(type: ProductTypeOption) {
@@ -130,41 +113,12 @@ export default function OrderFormSheet({
         setTypeChangeNote(removed && hadProducts);
     }
 
-    function updateLine(index: number, patch: Partial<Line>) {
-        setData(
-            'items',
-            data.items.map((line, i) =>
-                i === index ? { ...line, ...patch } : line,
-            ),
-        );
-    }
-
-    function removeLine(index: number) {
-        setData(
-            'items',
-            data.items.filter((_, i) => i !== index),
-        );
-    }
-
     function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        form.transform((current) => ({
-            customer_id: current.customer_id,
-            product_type_id: current.product_type_id,
-            need_by_date: current.need_by_date,
-            items: current.items.map((line) => ({
-                product_id: line.product_id,
-                quantity: line.quantity,
-            })),
-        }));
-
         const options = {
             preserveScroll: true,
-            onSuccess: () => {
-                onOpenChange(false);
-                form.reset();
-            },
+            onSuccess: () => onOpenChange(false),
         };
 
         if (order) {
@@ -238,8 +192,9 @@ export default function OrderFormSheet({
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <FieldError
+                            <InputError
                                 id="order-customer-error"
+                                role="alert"
                                 message={errors.customer_id}
                             />
                         </div>
@@ -251,55 +206,16 @@ export default function OrderFormSheet({
                             >
                                 Product type
                             </span>
-                            <div
-                                role="radiogroup"
-                                aria-labelledby="order-type-label"
-                                aria-invalid={!!errors.product_type_id}
-                                className="grid grid-cols-2 gap-2"
-                            >
-                                {productTypes.map((type) => {
-                                    const selected =
-                                        String(type.id) ===
-                                        data.product_type_id;
-
-                                    return (
-                                        <button
-                                            key={type.id}
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={selected}
-                                            onClick={() => selectType(type)}
-                                            className={cn(
-                                                'relative flex flex-col items-start gap-1 rounded-lg border-2 bg-card p-3 text-left transition-colors hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                                                selected
-                                                    ? 'border-primary bg-primary/5 hover:bg-primary/10'
-                                                    : 'border-input',
-                                            )}
-                                        >
-                                            <span className="flex items-center gap-2 font-medium">
-                                                <TypeSwatch
-                                                    productTypeId={type.id}
-                                                />
-                                                {type.name}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {formatNumber(
-                                                    type.unitsPerHour,
-                                                )}{' '}
-                                                units/h
-                                            </span>
-                                            {selected && (
-                                                <Check
-                                                    className="absolute top-2 right-2 size-4 text-primary"
-                                                    aria-hidden
-                                                />
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <FieldError
+                            <OrderTypePicker
+                                productTypes={productTypes}
+                                value={data.product_type_id}
+                                onSelect={selectType}
+                                invalid={!!errors.product_type_id}
+                                labelledBy="order-type-label"
+                            />
+                            <InputError
                                 id="order-type-error"
+                                role="alert"
                                 message={errors.product_type_id}
                             />
                             {typeChangeNote && (
@@ -309,138 +225,13 @@ export default function OrderFormSheet({
                             )}
                         </div>
 
-                        <fieldset className="grid gap-2">
-                            <legend className="mb-2 text-sm leading-none font-medium">
-                                Products
-                            </legend>
-                            {data.items.map((line, index) => {
-                                const productError =
-                                    fieldErrors[`items.${index}.product_id`];
-                                const quantityError =
-                                    fieldErrors[`items.${index}.quantity`];
-                                const usedElsewhere = new Set(
-                                    data.items
-                                        .filter((_, i) => i !== index)
-                                        .map((l) => l.product_id),
-                                );
-                                const options = (
-                                    selectedType?.products ?? []
-                                ).filter(
-                                    (product) =>
-                                        !usedElsewhere.has(String(product.id)),
-                                );
-
-                                return (
-                                    <div key={index} className="grid gap-1">
-                                        <div className="flex items-center gap-2">
-                                            <Select
-                                                value={line.product_id}
-                                                disabled={!selectedType}
-                                                onValueChange={(value) =>
-                                                    updateLine(index, {
-                                                        product_id: value,
-                                                    })
-                                                }
-                                            >
-                                                <SelectTrigger
-                                                    className="min-w-0 flex-1"
-                                                    aria-label={`Product, line ${index + 1}`}
-                                                    aria-invalid={
-                                                        !!productError
-                                                    }
-                                                >
-                                                    <SelectValue
-                                                        placeholder={
-                                                            selectedType
-                                                                ? 'Select a product'
-                                                                : 'Choose a type first'
-                                                        }
-                                                    />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {options.map((product) => (
-                                                        <SelectItem
-                                                            key={product.id}
-                                                            value={String(
-                                                                product.id,
-                                                            )}
-                                                        >
-                                                            {product.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <div className="relative w-32 shrink-0">
-                                                <Input
-                                                    type="number"
-                                                    min={1}
-                                                    step={1}
-                                                    inputMode="numeric"
-                                                    value={line.quantity}
-                                                    onChange={(event) =>
-                                                        updateLine(index, {
-                                                            quantity:
-                                                                event.target
-                                                                    .value,
-                                                        })
-                                                    }
-                                                    aria-label={`Quantity, line ${index + 1}`}
-                                                    aria-invalid={
-                                                        !!quantityError
-                                                    }
-                                                    className="pr-12"
-                                                />
-                                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
-                                                    units
-                                                </span>
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() =>
-                                                    removeLine(index)
-                                                }
-                                                disabled={
-                                                    data.items.length === 1
-                                                }
-                                                aria-label={`Remove line ${index + 1}`}
-                                            >
-                                                <X />
-                                            </Button>
-                                        </div>
-                                        <FieldError
-                                            id={`order-line-${index}-error`}
-                                            message={
-                                                productError ?? quantityError
-                                            }
-                                        />
-                                    </div>
-                                );
-                            })}
-                            <FieldError
-                                id="order-items-error"
-                                message={errors.items}
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="border-dashed"
-                                disabled={!selectedType}
-                                onClick={() =>
-                                    setData('items', [
-                                        ...data.items,
-                                        { ...emptyLine },
-                                    ])
-                                }
-                            >
-                                <Plus />
-                                Add product line
-                            </Button>
-                            <p className="text-sm font-medium tabular-nums">
-                                Total: {formatNumber(total)} units
-                            </p>
-                        </fieldset>
+                        <OrderLinesField
+                            lines={data.items}
+                            products={selectedType?.products ?? []}
+                            disabled={!selectedType}
+                            errors={fieldErrors}
+                            onChange={(items) => setData('items', items)}
+                        />
 
                         <div className="grid gap-2">
                             <Label htmlFor="order-need-by">Need-by date</Label>
@@ -464,8 +255,9 @@ export default function OrderFormSheet({
                             >
                                 Due by the end of this day.
                             </p>
-                            <FieldError
+                            <InputError
                                 id="order-need-by-error"
+                                role="alert"
                                 message={errors.need_by_date}
                             />
                         </div>
