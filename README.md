@@ -103,11 +103,14 @@ Laravel 13, Inertia v3 with React and TypeScript, Tailwind CSS v4 and shadcn/ui 
 - **Domain knowledge**: identified the specifics of print production from my past experience and training.
 - **Design**: UX/UI requirements and the test cases to cover.
 - **Database**: designed the schema myself in dbdiagram.io (diagram in `docs/DECISIONS.md`).
+- **Scheduling algorithm**: sketched a first, simple version of the algorithm, which AI then helped me refine and optimise.
 - **Stack choices**: starter kit, libraries and deployment.
 
 ### What AI did
 
 Implementation was done with Claude Code, following instructions and context I defined (see `CLAUDE.md`). Laravel Boost (in `composer.json`) generates the framework guidelines in `CLAUDE.md` and gives the agent an MCP server on the app, which made that context easier to set up.
+
+AI also helped me write the technical documentation, which I reviewed. It structured and formatted this README and `docs/DECISIONS.md`, and turned my notes into clear technical English. The content and the decisions they record are mine.
 
 ### How I verified it
 
