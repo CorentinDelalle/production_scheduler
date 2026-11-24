@@ -3,8 +3,8 @@ import { ClipboardList, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import DeleteDialog from '@/components/delete-dialog';
 import EmptyState from '@/components/empty-state';
-import OrderFormSheet from '@/components/order-form-sheet';
-import StatusBadge from '@/components/status-badge';
+import OrderFormSheet from '@/components/orders/order-form-sheet';
+import OrderStatusBadge from '@/components/orders/order-status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TypeSwatch from '@/components/type-swatch';
@@ -291,7 +291,7 @@ export default function Orders({
                                                         <td className="px-4">
                                                             {order.isLate !==
                                                                 null && (
-                                                                <StatusBadge
+                                                                <OrderStatusBadge
                                                                     late={
                                                                         order.isLate
                                                                     }
@@ -389,7 +389,7 @@ export default function Orders({
                                                         </span>
                                                     )}
                                                     {order.isLate !== null && (
-                                                        <StatusBadge
+                                                        <OrderStatusBadge
                                                             late={order.isLate}
                                                             className="mt-1"
                                                         />

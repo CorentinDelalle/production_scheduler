@@ -9,7 +9,7 @@ type Props = {
 };
 
 /** Late or on-time pill. The icon and text carry the meaning, not the colour alone. */
-export default function StatusBadge({ late, label, className }: Props) {
+export default function OrderStatusBadge({ late, label, className }: Props) {
     const Icon = late ? TriangleAlert : Check;
 
     return (

@@ -3,7 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 
 import DeleteDialog from '@/components/delete-dialog';
-import StatusBadge from '@/components/status-badge';
+import OrderStatusBadge from '@/components/orders/order-status-badge';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -112,7 +112,7 @@ export default function OrderDetailSheet({
                             <SheetTitle className="text-[19px] tracking-tight">
                                 Order #{assignment.orderId}
                             </SheetTitle>
-                            <StatusBadge
+                            <OrderStatusBadge
                                 late={assignment.isLate}
                                 label={
                                     assignment.isLate

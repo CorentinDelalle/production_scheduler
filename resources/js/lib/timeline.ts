@@ -1,6 +1,6 @@
 export const TIMELINE_TYPE_COUNT = 6;
 
-/** CSS class of the fixed palette color for a product type (see production-timeline.css). */
+/** CSS class of the fixed palette color for a product type (see components/plan/production-timeline.css). */
 export function typeColorClass(productTypeId: number): string {
     return `tl-type-${productTypeId % TIMELINE_TYPE_COUNT}`;
 }

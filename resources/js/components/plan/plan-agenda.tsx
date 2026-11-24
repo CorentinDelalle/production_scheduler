@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import StatusBadge from '@/components/status-badge';
+import OrderStatusBadge from '@/components/orders/order-status-badge';
 import {
     formatDay,
     formatDuration,
@@ -152,7 +152,7 @@ export default function PlanAgenda({
                                     </span>
                                 </span>
                                 {assignment.isLate && (
-                                    <StatusBadge
+                                    <OrderStatusBadge
                                         late
                                         label={`Late ${formatDuration(lateMinutes(assignment.needByDate, assignment.end, timezone))}`}
                                         className="self-center"

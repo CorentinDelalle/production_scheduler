@@ -8,7 +8,7 @@ import {
     store,
     update,
 } from '@/actions/App/Http/Controllers/ProductController';
-import CatalogSheet from '@/components/catalog-sheet';
+import CatalogSheet from '@/components/catalog/catalog-sheet';
 import DeleteDialog from '@/components/delete-dialog';
 import EmptyState from '@/components/empty-state';
 import InputError from '@/components/input-error';
