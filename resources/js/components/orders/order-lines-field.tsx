@@ -99,6 +99,7 @@ export default function OrderLinesField({
                                 <Input
                                     type="number"
                                     min={1}
+                                    max={1000000}
                                     step={1}
                                     inputMode="numeric"
                                     value={line.quantity}

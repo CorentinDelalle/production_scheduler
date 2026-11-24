@@ -25,8 +25,8 @@ class ProductTypeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('product_types', 'name')->ignore($this->route('product_type'))],
-            'units_per_hour' => ['required', 'integer', 'min:1'],
-            'changeover_minutes' => ['required', 'integer', 'min:0'],
+            'units_per_hour' => ['required', 'integer', 'min:1', 'max:100000'],
+            'changeover_minutes' => ['required', 'integer', 'min:0', 'max:1440'],
         ];
     }
 

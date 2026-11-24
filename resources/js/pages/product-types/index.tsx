@@ -209,6 +209,7 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                                         name="units_per_hour"
                                         type="number"
                                         min={1}
+                                        max={100000}
                                         inputMode="numeric"
                                         defaultValue={
                                             editing?.unitsPerHour ?? ''
@@ -233,6 +234,7 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                                         name="changeover_minutes"
                                         type="number"
                                         min={0}
+                                        max={1440}
                                         inputMode="numeric"
                                         defaultValue={
                                             editing?.changeoverMinutes ?? ''

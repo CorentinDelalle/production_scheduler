@@ -34,7 +34,7 @@ class OrderRequest extends FormRequest
                 'distinct',
                 Rule::exists('products', 'id')->where('product_type_id', $this->input('product_type_id')),
             ],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:1000000'],
         ];
     }
 

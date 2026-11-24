@@ -72,7 +72,13 @@ class ProductTypeControllerTest extends TestCase
             ->assertSessionHasErrors('units_per_hour');
         $this->post(route('product-types.store'), $this->payload(['name' => 'Cards', 'changeover_minutes' => -1]))
             ->assertSessionHasErrors('changeover_minutes');
+        $this->post(route('product-types.store'), $this->payload(['name' => 'Cards', 'units_per_hour' => 100_001]))
+            ->assertSessionHasErrors('units_per_hour');
+        $this->post(route('product-types.store'), $this->payload(['name' => 'Cards', 'changeover_minutes' => 1_441]))
+            ->assertSessionHasErrors('changeover_minutes');
         $this->post(route('product-types.store'), $this->payload(['name' => 'Cards', 'changeover_minutes' => 0]))
+            ->assertSessionHasNoErrors();
+        $this->post(route('product-types.store'), $this->payload(['name' => 'Posters', 'units_per_hour' => 100_000, 'changeover_minutes' => 1_440]))
             ->assertSessionHasNoErrors();
     }
 

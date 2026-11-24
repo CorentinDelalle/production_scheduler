@@ -134,12 +134,21 @@ class OrderControllerTest extends TestCase
 
         $this->post(route('orders.store'), $this->payload(['items' => [['product_id' => $this->product->id, 'quantity' => 0]]]))
             ->assertSessionHasErrors('items.0.quantity');
+        $this->post(route('orders.store'), $this->payload(['items' => [['product_id' => $this->product->id, 'quantity' => 1_000_001]]]))
+            ->assertSessionHasErrors('items.0.quantity');
 
         $this->post(route('orders.store'), $this->payload(['items' => []]))->assertSessionHasErrors('items');
         $this->post(route('orders.store'), $this->payload(['need_by_date' => 'soon']))->assertSessionHasErrors('need_by_date');
         $this->post(route('orders.store'), $this->payload(['customer_id' => 9999]))->assertSessionHasErrors('customer_id');
 
         $this->assertSame(0, Order::count());
+    }
+
+    public function test_a_quantity_of_one_million_is_accepted(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post(route('orders.store'), $this->payload(['items' => [['product_id' => $this->product->id, 'quantity' => 1_000_000]]]))
+            ->assertSessionHasNoErrors();
     }
 
     public function test_updating_an_order_replaces_its_items(): void
