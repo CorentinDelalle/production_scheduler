@@ -25,22 +25,23 @@ Written for the production manager (the planning team), prioritised with MoSCoW.
 
 ### Should
 
-| I want…                                    | so that…                                     | Status                                                                        |
-| ------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------- |
-| to manage machines (presses)               | the schedule reflects the shop's capacity    | ✅ The last machine cannot be deleted.                                        |
-| the schedule as a timeline per machine     | I spot idle time and changeovers at a glance | ✅ Agenda per machine on mobile.                                              |
-| invalid input rejected with clear messages | bad data never reaches the schedule          | ✅ Server-side validation, feature and browser tests.                         |
-| an intuitive and accessible plan           | I read the day's plan quickly                | 🟡 Desktop, tablet, mobile and dark mode checked. No accessibility audit yet. |
-| the app to open on its sign-in page        | I reach the plan without a marketing page    | ✅ `/` leads to the plan, or to sign-in for guests.                           |
+| I want…                                    | so that…                                     | Status                                                                                                                            |
+| ------------------------------------------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| to manage machines (presses)               | the schedule reflects the shop's capacity    | ✅ The last machine cannot be deleted.                                                                                            |
+| the schedule as a timeline per machine     | I spot idle time and changeovers at a glance | ✅ Agenda per machine on mobile.                                                                                                  |
+| invalid input rejected with clear messages | bad data never reaches the schedule          | ✅ Server-side validation, feature and browser tests.                                                                             |
+| an intuitive and accessible plan           | I read the day's plan quickly                | 🟡 Desktop, tablet, mobile and dark mode checked. WCAG 2.2 AA audit: mostly met, some contrast and keyboard gaps on the timeline. |
+| the app to open on its sign-in page        | I reach the plan without a marketing page    | ✅ `/` leads to the plan, or to sign-in for guests.                                                                               |
 
 ### Could
 
-| I want…                                                 | so that…                      | Status                                       |
-| ------------------------------------------------------- | ----------------------------- | -------------------------------------------- |
-| same-type orders batched together                       | fewer changeovers are needed  | 🟡 Only on equal need-by dates (v1), see §3. |
-| maintenance, breakdowns and holidays taken into account | the schedule stays realistic  | 📄 Machines run 24/7.                        |
-| the schedule saved                                      | past plans can be compared    | 📄 The schedule is derived data, not stored. |
-| to mark orders as produced                              | finished work leaves the plan | 📄 A delivered order is deleted, see §4.     |
+| I want…                                                 | so that…                                                    | Status                                       |
+| ------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------- |
+| same-type orders batched together                       | fewer changeovers are needed                                | 🟡 Only on equal need-by dates (v1), see §3. |
+| maintenance, breakdowns and holidays taken into account | the schedule stays realistic                                | 📄 Machines run 24/7.                        |
+| the schedule saved                                      | past plans can be compared                                  | 📄 The schedule is derived data, not stored. |
+| to mark orders as produced                              | finished work leaves the plan                               | 📄 A delivered order is deleted, see §4.     |
+| the app fully compliant with WCAG 2.2 AA                | every user can work with the plan, whatever their abilities | 📄 Mostly met today, see _Should_.           |
 
 ### Won't (out of scope)
 
