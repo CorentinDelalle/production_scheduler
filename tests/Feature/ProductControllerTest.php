@@ -70,6 +70,34 @@ class ProductControllerTest extends TestCase
             ->assertSessionHasErrors('product_type_id');
     }
 
+    public function test_the_name_is_limited_to_255_characters_and_the_type_is_required(): void
+    {
+        $type = ProductType::factory()->create();
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('products.store'), ['name' => str_repeat('a', 256), 'product_type_id' => $type->id])
+            ->assertSessionHasErrors('name');
+        $this->post(route('products.store'), ['name' => 'Label A', 'product_type_id' => null])
+            ->assertSessionHasErrors('product_type_id');
+        $this->post(route('products.store'), ['name' => str_repeat('a', 255), 'product_type_id' => $type->id])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('products', 1);
+    }
+
+    public function test_a_product_cannot_be_renamed_to_another_products_name(): void
+    {
+        $type = ProductType::factory()->create();
+        Product::factory()->for($type)->create(['name' => 'Label A']);
+        $product = Product::factory()->for($type)->create(['name' => 'Label B']);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('products.update', $product), ['name' => 'Label A', 'product_type_id' => $type->id])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame('Label B', $product->refresh()->name);
+    }
+
     public function test_an_unused_product_is_deleted(): void
     {
         $product = Product::factory()->create();

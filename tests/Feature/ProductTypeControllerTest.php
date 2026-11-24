@@ -8,6 +8,7 @@ use App\Models\ProductType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProductTypeControllerTest extends TestCase
@@ -80,6 +81,48 @@ class ProductTypeControllerTest extends TestCase
             ->assertSessionHasNoErrors();
         $this->post(route('product-types.store'), $this->payload(['name' => 'Posters', 'units_per_hour' => 100_000, 'changeover_minutes' => 1_440]))
             ->assertSessionHasNoErrors();
+    }
+
+    /**
+     * @return array<string, array{array<string, mixed>, string}>
+     */
+    public static function invalidTypeFields(): array
+    {
+        return [
+            'name too long' => [['name' => str_repeat('a', 256)], 'name'],
+            'name already used' => [['name' => 'Labels'], 'name'],
+            'no speed' => [['units_per_hour' => null], 'units_per_hour'],
+            'decimal speed' => [['units_per_hour' => 1.5], 'units_per_hour'],
+            'text speed' => [['units_per_hour' => 'fast'], 'units_per_hour'],
+            'no changeover time' => [['changeover_minutes' => null], 'changeover_minutes'],
+            'decimal changeover time' => [['changeover_minutes' => 2.5], 'changeover_minutes'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    #[DataProvider('invalidTypeFields')]
+    public function test_a_type_with_an_invalid_field_is_rejected(array $overrides, string $field): void
+    {
+        ProductType::factory()->create(['name' => 'Labels']);
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('product-types.store'), $this->payload(['name' => 'Cards', ...$overrides]))
+            ->assertSessionHasErrors($field);
+
+        $this->assertDatabaseCount('product_types', 1);
+    }
+
+    public function test_the_slowest_speed_and_a_255_character_name_are_accepted(): void
+    {
+        $name = str_repeat('a', 255);
+
+        $this->actingAs(User::factory()->create())
+            ->post(route('product-types.store'), $this->payload(['name' => $name, 'units_per_hour' => 1]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('product_types', ['name' => $name, 'units_per_hour' => 1]);
     }
 
     public function test_an_unused_type_is_deleted(): void

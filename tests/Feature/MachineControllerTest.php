@@ -52,6 +52,28 @@ class MachineControllerTest extends TestCase
         $this->post(route('machines.store'), ['name' => 'Press 1'])->assertSessionHasErrors('name');
     }
 
+    public function test_the_name_is_limited_to_255_characters(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('machines.store'), ['name' => str_repeat('a', 256)])->assertSessionHasErrors('name');
+        $this->post(route('machines.store'), ['name' => str_repeat('a', 255)])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('machines', 1);
+    }
+
+    public function test_a_machine_cannot_be_renamed_to_another_machines_name(): void
+    {
+        Machine::factory()->create(['name' => 'Press 1']);
+        $machine = Machine::factory()->create(['name' => 'Press 2']);
+
+        $this->actingAs(User::factory()->create())
+            ->put(route('machines.update', $machine), ['name' => 'Press 1'])
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame('Press 2', $machine->refresh()->name);
+    }
+
     public function test_a_machine_is_deleted_when_another_remains(): void
     {
         [$machine] = Machine::factory()->count(2)->create();

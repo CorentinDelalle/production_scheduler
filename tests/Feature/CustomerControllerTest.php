@@ -53,6 +53,16 @@ class CustomerControllerTest extends TestCase
             ->assertSessionHasErrors('name');
     }
 
+    public function test_the_name_is_limited_to_255_characters(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('customers.store'), ['name' => str_repeat('a', 256)])->assertSessionHasErrors('name');
+        $this->post(route('customers.store'), ['name' => str_repeat('a', 255)])->assertSessionHasNoErrors();
+
+        $this->assertDatabaseCount('customers', 1);
+    }
+
     public function test_an_unused_customer_is_deleted(): void
     {
         $customer = Customer::factory()->create();
