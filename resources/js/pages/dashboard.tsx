@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Plus, TriangleAlert } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import EmptyState from '@/components/empty-state';
 import OrderDetailSheet from '@/components/orders/order-detail-sheet';
@@ -9,12 +9,12 @@ import PlanKpis from '@/components/plan/plan-kpis';
 import PlanLateBanner from '@/components/plan/plan-late-banner';
 import ProductionTimeline from '@/components/plan/production-timeline';
 import type { TimelineZoom } from '@/components/plan/production-timeline';
-import TypeSwatch from '@/components/type-swatch';
+import TimelineLegend from '@/components/plan/timeline-legend';
+import TimelineZoomToggle from '@/components/plan/timeline-zoom-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import { index as machinesIndex } from '@/routes/machines';
 import type {
@@ -74,7 +74,9 @@ export default function Dashboard({
                 assignment.productType,
             ]),
         ),
-    ].sort(([a], [b]) => a - b);
+    ]
+        .map(([id, name]) => ({ id, name }))
+        .sort((a, b) => a.id - b.id);
 
     function changeStart(value: string) {
         setStartDate(value);
@@ -186,58 +188,11 @@ export default function Dashboard({
                         className="overflow-hidden rounded-xl border bg-card"
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                            <ul className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[13px] text-muted-foreground">
-                                {typesInPlan.map(([id, name]) => (
-                                    <li
-                                        key={id}
-                                        className="flex items-center gap-1.5"
-                                    >
-                                        <TypeSwatch
-                                            productTypeId={id}
-                                            className="size-3.5"
-                                        />
-                                        {name}
-                                    </li>
-                                ))}
-                                <li className="flex items-center gap-1.5">
-                                    <span className="tl-swatch tl-changeover size-3.5" />
-                                    Changeover
-                                </li>
-                                <li className="flex items-center gap-1.5">
-                                    <span className="inline-flex items-center gap-0.5 rounded-[4px] bg-danger px-1.5 text-[11px] font-bold text-danger-foreground">
-                                        <TriangleAlert
-                                            className="size-2.5"
-                                            aria-hidden
-                                        />
-                                        LATE
-                                    </span>
-                                    Misses delivery
-                                </li>
-                            </ul>
-                            <div
-                                role="group"
-                                aria-label="Zoom"
-                                className="flex rounded-lg bg-muted p-[3px]"
-                            >
-                                {(['compact', 'detailed'] as const).map(
-                                    (mode) => (
-                                        <button
-                                            key={mode}
-                                            type="button"
-                                            aria-pressed={zoom === mode}
-                                            onClick={() => setZoom(mode)}
-                                            className={cn(
-                                                'h-[30px] rounded-md px-3 text-[13px] font-medium capitalize',
-                                                zoom === mode
-                                                    ? 'bg-background shadow-xs'
-                                                    : 'text-muted-foreground',
-                                            )}
-                                        >
-                                            {mode}
-                                        </button>
-                                    ),
-                                )}
-                            </div>
+                            <TimelineLegend types={typesInPlan} />
+                            <TimelineZoomToggle
+                                value={zoom}
+                                onChange={setZoom}
+                            />
                         </div>
                         <div className="relative border-t">
                             <ProductionTimeline
