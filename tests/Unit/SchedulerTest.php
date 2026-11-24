@@ -11,6 +11,9 @@ use App\Services\Scheduler;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Random\Engine\Mt19937;
+use Random\Randomizer;
 use Tests\TestCase;
 
 class SchedulerTest extends TestCase
@@ -224,6 +227,222 @@ class SchedulerTest extends TestCase
         $this->assertSame('2026-11-01 07:00:00', $assignment->end->utc()->toDateTimeString());
         $this->assertSame('2026-11-01 02:00:00', $assignment->end->toDateTimeString());
         $this->assertSame(-300, $assignment->end->utcOffset());
+    }
+
+    public function test_durations_are_real_elapsed_minutes_across_the_spring_daylight_saving_change(): void
+    {
+        // DST starts on 2026-03-08 at 02:00 in Montreal: 00:00 EST + 180 elapsed minutes = 04:00 EDT.
+        $start = CarbonImmutable::parse('2026-03-08 00:00:00', 'America/Toronto');
+        $order = $this->makeOrder(1, 1, 400, 30, [1000], '2026-03-10');
+
+        $assignment = (new Scheduler)->schedule(new Collection([$order]), new Collection([$this->makeMachine(1)]), $start)[0];
+
+        $this->assertSame('2026-03-08 08:00:00', $assignment->end->utc()->toDateTimeString());
+        $this->assertSame('2026-03-08 04:00:00', $assignment->end->toDateTimeString());
+        $this->assertSame(-240, $assignment->end->utcOffset());
+    }
+
+    public function test_a_single_unit_takes_one_whole_minute(): void
+    {
+        $assignments = $this->schedule([$this->type1Order(1, [1], '2026-12-05')], [1]);
+
+        $this->assertSame('2026-12-01 00:31:00', $assignments[0]->end->toDateTimeString());
+    }
+
+    public function test_a_type_without_changeover_time_starts_producing_at_once(): void
+    {
+        $assignments = $this->schedule([$this->makeOrder(1, 1, 600, 0, [600], '2026-12-05')], [1]);
+
+        $this->assertSame('2026-12-01 00:00:00', $assignments[0]->changeoverStart->toDateTimeString());
+        $this->assertSame('2026-12-01 00:00:00', $assignments[0]->productionStart->toDateTimeString());
+        $this->assertSame('2026-12-01 01:00:00', $assignments[0]->end->toDateTimeString());
+    }
+
+    public function test_a_very_long_run_keeps_minute_precision(): void
+    {
+        // The largest accepted quantity at the slowest accepted speed: 1,000,000 units at 1 unit per hour.
+        $assignments = $this->schedule([$this->makeOrder(1, 1, 1, 30, [1_000_000], '2026-12-05')], [1]);
+
+        $this->assertSame('2140-12-29 16:30:00', $assignments[0]->end->toDateTimeString());
+        $this->assertTrue($assignments[0]->isLate);
+    }
+
+    public function test_on_equal_need_by_dates_the_shorter_order_goes_first(): void
+    {
+        $assignments = $this->schedule([
+            $this->type1Order(1, [7150], '2026-12-05'),
+            $this->type1Order(2, [715], '2026-12-05'),
+        ], [1]);
+
+        $this->assertSame([2, 1], array_map(fn ($assignment) => $assignment->order->id, $assignments));
+    }
+
+    public function test_an_earlier_need_by_date_goes_first_even_when_a_later_order_would_save_a_changeover(): void
+    {
+        // v1 only batches on equal dates: order 3 would save a changeover after order 1, but order 2 is due first.
+        $assignments = $this->schedule([
+            $this->type1Order(1, [715], '2026-12-03'),
+            $this->type2Order(2, [770], '2026-12-04'),
+            $this->type1Order(3, [715], '2026-12-05'),
+        ], [1]);
+
+        $this->assertSame([1, 2, 3], array_map(fn ($assignment) => $assignment->order->id, $assignments));
+        $this->assertSame('2026-12-01 03:00:00', $assignments[2]->changeoverStart->toDateTimeString());
+        $this->assertSame('2026-12-01 03:30:00', $assignments[2]->productionStart->toDateTimeString());
+        $this->assertSame('2026-12-01 04:30:00', $assignments[2]->end->toDateTimeString());
+    }
+
+    public function test_a_free_machine_wins_over_a_machine_set_up_for_the_type_when_it_ends_earlier(): void
+    {
+        $assignments = $this->schedule([
+            $this->type1Order(1, [7150], '2026-12-03'),
+            $this->type2Order(2, [770], '2026-12-04'),
+            $this->type1Order(3, [715], '2026-12-05'),
+        ], [1, 2]);
+
+        // Machine 1 (type 1) is busy until 10:30. Machine 2 (type 2) is free at 01:30: changeover, then 1 h.
+        $this->assertSame([1, 2, 2], array_map(fn ($assignment) => $assignment->machineId, $assignments));
+        $this->assertSame('2026-12-01 01:30:00', $assignments[2]->changeoverStart->toDateTimeString());
+        $this->assertSame('2026-12-01 03:00:00', $assignments[2]->end->toDateTimeString());
+    }
+
+    public function test_a_late_order_delays_the_orders_after_it(): void
+    {
+        $assignments = $this->schedule([
+            $this->type1Order(1, [33605], '2026-12-01'),
+            $this->type1Order(2, [715], '2026-12-02'),
+        ], [1]);
+
+        // Order 1 (30 min + 2820 min) ends on Dec 2 at 23:30. Order 2 needs one hour: alone it would be
+        // on time, after order 1 it ends at 00:30 the day after its need-by date.
+        $this->assertSame('2026-12-02 23:30:00', $assignments[0]->end->toDateTimeString());
+        $this->assertTrue($assignments[0]->isLate);
+        $this->assertSame('2026-12-03 00:30:00', $assignments[1]->end->toDateTimeString());
+        $this->assertTrue($assignments[1]->isLate);
+    }
+
+    public function test_an_order_due_before_the_start_date_goes_first_and_is_late(): void
+    {
+        $assignments = $this->schedule([
+            $this->type1Order(1, [715], '2026-12-02'),
+            $this->type1Order(2, [715], '2026-11-30'),
+        ], [1]);
+
+        $this->assertSame([2, 1], array_map(fn ($assignment) => $assignment->order->id, $assignments));
+        $this->assertTrue($assignments[0]->isLate);
+        $this->assertFalse($assignments[1]->isLate);
+    }
+
+    /**
+     * @return array<string, array{int}>
+     */
+    public static function generatedPlanSeeds(): array
+    {
+        return collect(range(1, 20))->mapWithKeys(fn (int $seed) => ["seed {$seed}" => [$seed]])->all();
+    }
+
+    #[DataProvider('generatedPlanSeeds')]
+    public function test_a_generated_plan_places_every_order_once_back_to_back_with_the_right_durations(int $seed): void
+    {
+        ['orders' => $orders, 'machineIds' => $machineIds] = $this->generatePlan($seed);
+
+        $assignments = $this->schedule($orders, $machineIds);
+
+        $assignedIds = array_map(fn (Assignment $assignment) => $assignment->order->id, $assignments);
+        sort($assignedIds);
+        $this->assertSame(range(1, count($orders)), $assignedIds);
+
+        $needByDates = array_map(fn (Assignment $assignment) => $assignment->order->need_by_date->toDateString(), $assignments);
+        $sortedNeedByDates = $needByDates;
+        sort($sortedNeedByDates);
+        $this->assertSame($sortedNeedByDates, $needByDates, 'Orders are placed by need-by date.');
+
+        /** @var array<int, Assignment> $previousOnMachine */
+        $previousOnMachine = [];
+        foreach ($assignments as $assignment) {
+            $order = $assignment->order;
+            $previous = $previousOnMachine[$assignment->machineId] ?? null;
+            $label = "order {$order->id} on machine {$assignment->machineId}";
+
+            $expectedChangeoverStart = $previous === null ? $this->start() : $previous->end;
+            $this->assertSame($expectedChangeoverStart->toDateTimeString(), $assignment->changeoverStart->toDateTimeString(), "{$label} starts when the machine is free.");
+
+            $expectedChangeover = $previous?->order->product_type_id === $order->product_type_id ? 0 : $order->productType->changeover_minutes;
+            $this->assertSame($expectedChangeover, $this->minutesBetween($assignment->changeoverStart, $assignment->productionStart), "{$label} changeover.");
+
+            $expectedProduction = (int) ceil($order->items->sum('quantity') * 60 / $order->productType->units_per_hour);
+            $this->assertSame($expectedProduction, $this->minutesBetween($assignment->productionStart, $assignment->end), "{$label} production time.");
+
+            // Late when the minute before the end falls after the need-by day.
+            $expectedLate = $assignment->end->subMinute()->toDateString() > $order->need_by_date->toDateString();
+            $this->assertSame($expectedLate, $assignment->isLate, "{$label} late flag.");
+
+            $previousOnMachine[$assignment->machineId] = $assignment;
+        }
+    }
+
+    #[DataProvider('generatedPlanSeeds')]
+    public function test_a_generated_plan_does_not_depend_on_the_order_of_the_input(int $seed): void
+    {
+        ['orders' => $orders, 'machineIds' => $machineIds] = $this->generatePlan($seed);
+        $shuffler = new Randomizer(new Mt19937($seed));
+
+        $plan = $this->describe($this->schedule($orders, $machineIds));
+        $shuffledPlan = $this->describe($this->schedule($shuffler->shuffleArray($orders), $shuffler->shuffleArray($machineIds)));
+
+        $this->assertSame($plan, $shuffledPlan);
+    }
+
+    /**
+     * A random but reproducible plan: 1 to 4 machines, 1 to 40 orders of 3 types, need-by dates from
+     * the day before the start to two weeks after it.
+     *
+     * @return array{orders: list<Order>, machineIds: list<int>}
+     */
+    private function generatePlan(int $seed): array
+    {
+        $random = new Randomizer(new Mt19937($seed));
+
+        $types = [];
+        foreach ([1, 2, 3] as $typeId) {
+            $types[$typeId] = ['speed' => $random->getInt(100, 2000), 'changeover' => $random->getInt(0, 120)];
+        }
+
+        $orders = [];
+        foreach (range(1, $random->getInt(1, 40)) as $id) {
+            $typeId = $random->getInt(1, 3);
+            $orders[] = $this->makeOrder(
+                $id,
+                $typeId,
+                $types[$typeId]['speed'],
+                $types[$typeId]['changeover'],
+                array_map(fn () => $random->getInt(1, 20000), range(1, $random->getInt(1, 3))),
+                $this->start()->addDays($random->getInt(-1, 14))->toDateString(),
+            );
+        }
+
+        return ['orders' => $orders, 'machineIds' => range(1, $random->getInt(1, 4))];
+    }
+
+    /**
+     * @param  list<Assignment>  $assignments
+     * @return list<string>
+     */
+    private function describe(array $assignments): array
+    {
+        return array_map(fn (Assignment $assignment) => implode(' | ', [
+            $assignment->order->id,
+            $assignment->machineId,
+            $assignment->changeoverStart->toDateTimeString(),
+            $assignment->productionStart->toDateTimeString(),
+            $assignment->end->toDateTimeString(),
+            $assignment->isLate ? 'late' : 'on time',
+        ]), $assignments);
+    }
+
+    private function minutesBetween(CarbonImmutable $from, CarbonImmutable $to): int
+    {
+        return intdiv($to->getTimestamp() - $from->getTimestamp(), 60);
     }
 
     /**
