@@ -16,23 +16,12 @@ import TypeSwatch from '@/components/type-swatch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatNumber } from '@/lib/format';
-
-type ProductType = {
-    id: number;
-    name: string;
-    unitsPerHour: number;
-    changeoverMinutes: number;
-    productsCount: number;
-    ordersCount: number;
-};
+import { formatCount, formatNumber } from '@/lib/format';
+import type { ProductType } from '@/types';
 
 type Props = {
     productTypes: ProductType[];
 };
-
-const plural = (count: number, noun: string): string =>
-    `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;
 
 export default function ProductTypesIndex({ productTypes }: Props) {
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -80,9 +69,10 @@ export default function ProductTypesIndex({ productTypes }: Props) {
 
     const usageParts = deleting
         ? [
-              deleting.ordersCount > 0 && plural(deleting.ordersCount, 'order'),
+              deleting.ordersCount > 0 &&
+                  formatCount(deleting.ordersCount, 'order'),
               deleting.productsCount > 0 &&
-                  plural(deleting.productsCount, 'product'),
+                  formatCount(deleting.productsCount, 'product'),
           ].filter(Boolean)
         : [];
     const isBlocked = usageParts.length > 0;
@@ -235,7 +225,7 @@ export default function ProductTypesIndex({ productTypes }: Props) {
                             <p>
                                 <strong className="font-semibold">
                                     Used by{' '}
-                                    {plural(editing.ordersCount, 'order')}
+                                    {formatCount(editing.ordersCount, 'order')}
                                 </strong>{' '}
                                 — Changing speed or changeover time recalculates
                                 the plan.

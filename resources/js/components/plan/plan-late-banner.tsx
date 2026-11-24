@@ -1,7 +1,7 @@
 import { TriangleAlert } from 'lucide-react';
 
 import { formatDuration } from '@/lib/format';
-import { lateMinutes } from '@/lib/timeline';
+import { lateMinutes } from '@/lib/schedule';
 import type { ScheduleAssignment } from '@/types';
 
 type Props = {

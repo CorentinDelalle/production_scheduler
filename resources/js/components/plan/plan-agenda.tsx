@@ -8,7 +8,7 @@ import {
     formatTime,
     minutesBetween,
 } from '@/lib/format';
-import { lateMinutes, typeColorClass } from '@/lib/timeline';
+import { lateMinutes, typeColorClass } from '@/lib/schedule';
 import { cn } from '@/lib/utils';
 import type { ScheduleAssignment, ScheduleMachine } from '@/types';
 

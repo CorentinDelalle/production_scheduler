@@ -1,4 +1,4 @@
-import { typeColorClass } from '@/lib/timeline';
+import { typeColorClass } from '@/lib/schedule';
 import { cn } from '@/lib/utils';
 
 type Props = {

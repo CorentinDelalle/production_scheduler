@@ -15,11 +15,7 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-type Machine = {
-    id: number;
-    name: string;
-};
+import type { Machine } from '@/types';
 
 type Props = {
     machines: Machine[];

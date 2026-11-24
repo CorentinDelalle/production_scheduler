@@ -39,6 +39,21 @@ export function formatDateTime(iso: string, timeZone: string): string {
     return `${formatDate(iso, timeZone)}, ${formatTime(iso, timeZone)}`;
 }
 
+/** 3, 'order' -> "3 orders". */
+export function formatCount(count: number, noun: string): string {
+    return `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/** An ISO instant in the timezone -> "Mon 08:00". */
+export function formatWeekdayTime(iso: string, timeZone: string): string {
+    const day = new Date(iso).toLocaleDateString('en-GB', {
+        timeZone,
+        weekday: 'short',
+    });
+
+    return `${day} ${formatTime(iso, timeZone)}`;
+}
+
 /** A duration in minutes -> "45 min", "2 h", "2 h 05". */
 export function formatDuration(minutes: number): string {
     const rounded = Math.round(minutes);

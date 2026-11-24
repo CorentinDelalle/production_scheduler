@@ -21,7 +21,7 @@ import {
     formatNumber,
     minutesBetween,
 } from '@/lib/format';
-import { lateMinutes } from '@/lib/timeline';
+import { lateMinutes } from '@/lib/schedule';
 import type {
     ProductTypeOption,
     ScheduleAssignment,

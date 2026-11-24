@@ -15,20 +15,12 @@ import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatNumber } from '@/lib/format';
-
-type Customer = {
-    id: number;
-    name: string;
-    ordersCount: number;
-};
+import { formatCount, formatNumber } from '@/lib/format';
+import type { Customer } from '@/types';
 
 type Props = {
     customers: Customer[];
 };
-
-const plural = (count: number, noun: string): string =>
-    `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;
 
 export default function CustomersIndex({ customers }: Props) {
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -209,7 +201,7 @@ export default function CustomersIndex({ customers }: Props) {
                     }
                     description={
                         isBlocked
-                            ? `This customer still has ${plural(deleting.ordersCount, 'order')}. Delete ${deleting.ordersCount === 1 ? 'it' : 'them'} first, then try again.`
+                            ? `This customer still has ${formatCount(deleting.ordersCount, 'order')}. Delete ${deleting.ordersCount === 1 ? 'it' : 'them'} first, then try again.`
                             : 'This customer has no orders.'
                     }
                     confirmLabel="Delete customer"

@@ -2,14 +2,18 @@ import { useEffect, useRef } from 'react';
 import type { ScheduleAssignment, ScheduleMachine } from '@/types';
 import * as vis from 'vis-timeline/standalone';
 import type { TimelineOptions } from 'vis-timeline/standalone';
-import { formatDateTime, formatNumber, minutesBetween } from '@/lib/format';
 import {
+    formatDateTime,
+    formatNumber,
     formatWeekdayTime,
+    minutesBetween,
+} from '@/lib/format';
+import {
     needByDeadline,
     startOfDayInTimezone,
     timezoneOffsetMinutes,
     typeColorClass,
-} from '@/lib/timeline';
+} from '@/lib/schedule';
 import 'vis-timeline/styles/vis-timeline-graph2d.css';
 import './production-timeline.css';
 

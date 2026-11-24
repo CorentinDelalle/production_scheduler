@@ -23,28 +23,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { formatNumber } from '@/lib/format';
-
-type Product = {
-    id: number;
-    name: string;
-    productTypeId: number;
-    productType: string;
-    ordersCount: number;
-};
-
-type ProductTypeOption = {
-    id: number;
-    name: string;
-};
+import { formatCount, formatNumber } from '@/lib/format';
+import type { Product, ProductTypeOption } from '@/types';
 
 type Props = {
     products: Product[];
-    productTypes: ProductTypeOption[];
+    productTypes: Pick<ProductTypeOption, 'id' | 'name'>[];
 };
-
-const plural = (count: number, noun: string): string =>
-    `${formatNumber(count)} ${noun}${count === 1 ? '' : 's'}`;
 
 export default function ProductsIndex({ products, productTypes }: Props) {
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -288,7 +273,7 @@ export default function ProductsIndex({ products, productTypes }: Props) {
                     }
                     description={
                         isBlocked
-                            ? `This product is on ${plural(deleting.ordersCount, 'order')}. Remove it from ${deleting.ordersCount === 1 ? 'that order' : 'those orders'} first, then try again.`
+                            ? `This product is on ${formatCount(deleting.ordersCount, 'order')}. Remove it from ${deleting.ordersCount === 1 ? 'that order' : 'those orders'} first, then try again.`
                             : 'No orders use this product.'
                     }
                     confirmLabel="Delete product"

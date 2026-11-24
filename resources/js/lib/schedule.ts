@@ -1,6 +1,6 @@
 export const TIMELINE_TYPE_COUNT = 6;
 
-/** CSS class of the fixed palette color for a product type (see components/plan/production-timeline.css). */
+/** CSS class of the fixed palette color for a product type (`.tl-type-N` classes in resources/css/app.css). */
 export function typeColorClass(productTypeId: number): string {
     return `tl-type-${productTypeId % TIMELINE_TYPE_COUNT}`;
 }
@@ -59,19 +59,4 @@ export function lateMinutes(
             needByDeadline(needByDate, timeZone).getTime()) /
             60000,
     );
-}
-
-/** An ISO instant in the timezone -> "Mon 08:00". */
-export function formatWeekdayTime(iso: string, timeZone: string): string {
-    const day = new Date(iso).toLocaleDateString('en-GB', {
-        timeZone,
-        weekday: 'short',
-    });
-    const time = new Date(iso).toLocaleTimeString('en-GB', {
-        timeZone,
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-
-    return `${day} ${time}`;
 }
